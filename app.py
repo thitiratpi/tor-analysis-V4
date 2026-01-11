@@ -24,7 +24,7 @@ from utils.data_validator import validate_products, check_duplicates, prepare_sa
 # ==========================================
 
 st.set_page_config(
-    page_title="WiseSight TOR Analyzer",
+    page_title="Wisesight TOR Analyzer",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
