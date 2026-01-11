@@ -1,0 +1,79 @@
+# ================================================================================
+# WISESIGHT STREAMLIT - UI/UX CONFIGURATION
+# ================================================================================
+
+# ===== THEME CONFIGURATION =====
+[theme]
+# Primary brand color (WiseSight blue)
+primaryColor = "#1f77b4"
+
+# Background colors
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+
+# Text colors
+textColor = "#262730"
+
+# Font
+font = "sans serif"
+
+# ===== SERVER CONFIGURATION =====
+[server]
+# Port to run on
+port = 8501
+
+# Enable CORS
+enableCORS = false
+
+# Enable XSRF protection
+enableXsrfProtection = true
+
+# Max upload size (200 MB for large TOR files)
+maxUploadSize = 200
+
+# ===== BROWSER CONFIGURATION =====
+[browser]
+# Gather usage stats
+gatherUsageStats = false
+
+# Server address
+serverAddress = "localhost"
+
+# ===== CLIENT CONFIGURATION =====
+[client]
+# Show error details
+showErrorDetails = true
+
+# Toolbar mode: "auto", "developer", "viewer", "minimal"
+toolbarMode = "minimal"
+
+# ===== LOGGER CONFIGURATION =====
+[logger]
+# Log level: "error", "warning", "info", "debug"
+level = "info"
+
+# Message format
+messageFormat = "%(asctime)s %(levelname)s: %(message)s"
+
+# ===== RUNNER CONFIGURATION =====
+[runner]
+# Magic commands
+magicEnabled = true
+
+# Install Tracer
+installTracer = false
+
+# Fix Matplotlib
+fixMatplotlib = true
+
+# Post script GC
+postScriptGC = true
+
+# Fast reruns
+fastReruns = true
+
+# ===== DEPRECATION WARNINGS =====
+[deprecation]
+showfileUploaderEncoding = false
+showImageFormat = false
+showPyplotGlobalUse = false
