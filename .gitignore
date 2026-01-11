@@ -207,3 +207,20 @@ marimo/_lsp/
 __marimo__/
 
 .streamlit/secrets.toml
+
+# ===== WISESIGHT PROJECT ADDITIONS =====
+# Streamlit additional files
+.streamlit/.credentials
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Data files (TOR uploads)
+*.xlsx
+*.pdf
+*.docx
+
+# Project directories
+uploads/
+temp/
