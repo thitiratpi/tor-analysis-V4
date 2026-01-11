@@ -33,34 +33,198 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
 <style>
+    /* ===== GLOBAL STYLES ===== */
+    .main {
+        padding: 0rem 1rem;
+    }
+    
+    /* ===== HEADER STYLES ===== */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
         color: #1f77b4;
+        margin-bottom: 0.5rem;
+        text-align: center;
     }
+    
     .step-header {
         font-size: 1.8rem;
         font-weight: bold;
         color: #ff7f0e;
         margin-top: 2rem;
+        margin-bottom: 1rem;
+        padding-left: 0.5rem;
+        border-left: 5px solid #ff7f0e;
     }
+    
+    /* ===== CARD STYLES ===== */
     .success-box {
         padding: 1rem;
         border-radius: 0.5rem;
         background-color: #d4edda;
         border-left: 5px solid #28a745;
+        margin: 1rem 0;
     }
+    
     .warning-box {
         padding: 1rem;
         border-radius: 0.5rem;
         background-color: #fff3cd;
         border-left: 5px solid #ffc107;
+        margin: 1rem 0;
     }
+    
     .error-box {
         padding: 1rem;
         border-radius: 0.5rem;
         background-color: #f8d7da;
         border-left: 5px solid #dc3545;
+        margin: 1rem 0;
+    }
+    
+    .info-box {
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: #d1ecf1;
+        border-left: 5px solid #17a2b8;
+        margin: 1rem 0;
+    }
+    
+    /* ===== BUTTON STYLES ===== */
+    .stButton > button {
+        width: 100%;
+        border-radius: 5px;
+        height: 3rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* ===== DATA EDITOR STYLES ===== */
+    .stDataFrame {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* ===== METRICS STYLES ===== */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-size: 1rem;
+    }
+    
+    /* ===== FILE UPLOADER ===== */
+    [data-testid="stFileUploader"] {
+        border: 2px dashed #1f77b4;
+        border-radius: 10px;
+        padding: 2rem;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: #ff7f0e;
+        background-color: #fff;
+    }
+    
+    /* ===== SIDEBAR STYLES ===== */
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+    }
+    
+    [data-testid="stSidebar"] .element-container {
+        margin-bottom: 1rem;
+    }
+    
+    /* ===== EXPANDER STYLES ===== */
+    .streamlit-expanderHeader {
+        font-weight: 600;
+        font-size: 1.1rem;
+        background-color: #f0f2f6;
+        border-radius: 5px;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background-color: #e0e2e6;
+    }
+    
+    /* ===== PROGRESS BAR ===== */
+    .stProgress > div > div > div > div {
+        background-color: #1f77b4;
+    }
+    
+    /* ===== TABS ===== */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2rem;
+        background-color: #f0f2f6;
+        padding: 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 3rem;
+        border-radius: 5px;
+        padding: 0 1.5rem;
+        font-weight: 600;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #1f77b4;
+        color: white;
+    }
+    
+    /* ===== DOWNLOAD BUTTON ===== */
+    .stDownloadButton > button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #218838;
+    }
+    
+    /* ===== DIVIDER ===== */
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 2px solid #e0e2e6;
+    }
+    
+    /* ===== FOOTER ===== */
+    footer {
+        visibility: hidden;
+    }
+    
+    /* ===== HIDE STREAMLIT BRANDING ===== */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* ===== CUSTOM SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 </style>
 """, unsafe_allow_html=True)
