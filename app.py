@@ -382,7 +382,51 @@ if progress_steps:
     st.info(" → ".join(progress_steps))
 
 # ===== STEP 1: FILE UPLOAD =====
-# ... (code เดิม แต่เปลี่ยน gemini_key เป็น GEMINI_API_KEY)
+st.markdown('<p class="step-header">1️⃣ Upload TOR File</p>', unsafe_allow_html=True)
+
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    uploaded_file = st.file_uploader(
+        "Choose TOR file",
+        type=['pdf', 'docx', 'txt', 'xlsx', 'xls'],
+        help="Supported formats: PDF, Word, Excel, Text"
+    )
+
+with col2:
+    if uploaded_file:
+        st.metric("File Size", f"{uploaded_file.size / 1024:.1f} KB")
+
+if uploaded_file and not st.session_state.file_uploaded:
+    with st.spinner("📂 Reading file..."):
+        try:
+            # Read file content
+            file_content = read_file_content(uploaded_file)
+            
+            # Load master data if not loaded
+            if st.session_state.spec_df is None:
+                with st.spinner("🔄 Loading master data from Google Sheet..."):
+                    pricing_df, addon_df, spec_df, def_dict = load_master_data(sheet_url)
+                    st.session_state.pricing_df = pricing_df
+                    st.session_state.addon_df = addon_df
+                    st.session_state.spec_df = spec_df
+                    st.session_state.def_dict = def_dict
+            
+            # Store in session
+            st.session_state.tor_raw_text = file_content
+            st.session_state.file_name = uploaded_file.name
+            st.session_state.file_uploaded = True
+            
+            # Display preview
+            with st.expander("👀 Preview Raw Text", expanded=False):
+                st.text_area("Raw content", file_content[:2000] + "...", height=200, disabled=True)
+            
+            st.success(f"✅ File loaded: {uploaded_file.name} ({len(file_content)} characters)")
+            
+        except Exception as e:
+            st.error(f"❌ Error reading file: {e}")
+            import traceback
+            st.code(traceback.format_exc())
 
 # ===== STEP 2: AI ANALYSIS =====
 if st.session_state.file_uploaded and not st.session_state.analysis_done:
@@ -672,7 +716,7 @@ if st.session_state.analysis_done:
                 try:
                     budget_factors = extract_budget_factors(
                         st.session_state.tor_raw_text,
-                        st.session_state.GEMINI_API_KEY
+                        GEMINI_API_KEY
                     )
                     
                     st.session_state.budget_factors = budget_factors
