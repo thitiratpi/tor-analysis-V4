@@ -4,17 +4,10 @@
 
 # ===== THEME CONFIGURATION =====
 [theme]
-# Primary brand color (WiseSight blue)
-primaryColor = "#1f77b4"
-
-# Background colors
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f0f2f6"
-
-# Text colors
-textColor = "#262730"
-
-# Font
+primaryColor = "#FF4B4B"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
 font = "sans serif"
 
 # ===== SERVER CONFIGURATION =====
