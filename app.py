@@ -1,6 +1,6 @@
 """
 ================================================================================
-WISESIGHT STREAMLIT APP V2.0 - COMPLETE VERSION
+WISESIGHT STREAMLIT APP V2.1 - REVISED
 ================================================================================
 Full-featured TOR Analysis with Budget Engine
 """
@@ -24,10 +24,15 @@ from utils.data_validator import validate_products, check_duplicates, prepare_sa
 # ==========================================
 
 st.set_page_config(
-    page_title="Wisesight TOR Analyzer",
+    page_title="WiseSight TOR Analyzer",
     page_icon="🔍",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
+        'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
+        'About': "# WiseSight TOR Analyzer\nVersion 2.1.0\nPowered by Streamlit + Gemini AI"
+    }
 )
 
 # Custom CSS
@@ -199,33 +204,9 @@ st.markdown("""
         border-top: 2px solid #e0e2e6;
     }
     
-    /* ===== FOOTER ===== */
-    footer {
-        visibility: hidden;
-    }
-    
     /* ===== HIDE STREAMLIT BRANDING ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    /* ===== CUSTOM SCROLLBAR ===== */
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 5px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -255,6 +236,8 @@ if 'tor_raw_text' not in st.session_state:
     st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state:
     st.session_state.matched_products = []
+if 'gemini_key' not in st.session_state:
+    st.session_state.gemini_key = None
 
 # ==========================================
 # SIDEBAR - CONFIGURATION
@@ -263,21 +246,29 @@ if 'matched_products' not in st.session_state:
 with st.sidebar:
     st.title("🔧 Configuration")
     
-    st.subheader("1️⃣ API Keys")
-    gemini_key = st.text_input(
+    # ===== 1. API KEYS (HIDDEN INPUT) =====
+    st.subheader("🔐 API Keys")
+    
+    # Secure input - never display the key
+    gemini_key_input = st.text_input(
         "Gemini API Key",
         type="password",
-        help="Required for AI processing"
+        value=st.session_state.gemini_key or "",
+        help="Enter your Gemini API key (will be hidden)",
+        key="gemini_api_input"
     )
     
-    if gemini_key:
-        st.success("✅ API Key provided")
+    # Store in session without displaying
+    if gemini_key_input:
+        st.session_state.gemini_key = gemini_key_input
+        st.success("✅ API Key configured")
     else:
         st.warning("⚠️ API Key required")
     
     st.divider()
     
-    st.subheader("2️⃣ Google Sheet")
+    # ===== 2. GOOGLE SHEET =====
+    st.subheader("📊 Google Sheet")
     sheet_url = st.text_input(
         "Sheet URL",
         value="https://docs.google.com/spreadsheets/d/1j-l7KmbwK7h5Sp023pu2K91NOzVRQascjVwLLmtvPX4",
@@ -298,29 +289,7 @@ with st.sidebar:
     
     st.divider()
     
-    st.subheader("3️⃣ Options")
-    
-    enable_ai_formatting = st.checkbox(
-        "Enable AI Text Formatting",
-        value=True,
-        help="Use AI to clean and format TOR text"
-    )
-    
-    enable_fr_nfr = st.checkbox(
-        "Enable FR/NFR Classification",
-        value=True,
-        help="Classify Functional vs Non-Functional requirements"
-    )
-    
-    enable_budget = st.checkbox(
-        "Enable Budget Engine",
-        value=True,
-        help="Calculate budget estimation"
-    )
-    
-    st.divider()
-    
-    # History
+    # ===== 3. SAVE HISTORY =====
     st.subheader("📜 Save History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
@@ -420,22 +389,24 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
     
     if st.button("🚀 Start Analysis", type="primary", use_container_width=True):
         
+        # Check API key
+        if not st.session_state.gemini_key:
+            st.error("❌ Please enter Gemini API Key in sidebar")
+            st.stop()
+        
         # Progress tracking
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         try:
-            # STEP 1: AI Text Formatting
+            # STEP 1: AI Text Formatting (Always enabled)
             status_text.text("🤖 Step 1/3: AI Text Formatting...")
             progress_bar.progress(10)
             
-            if enable_ai_formatting and gemini_key:
-                formatted_text = extract_scope_smart_ai(
-                    st.session_state.tor_raw_text,
-                    gemini_key
-                )
-            else:
-                formatted_text = st.session_state.tor_raw_text
+            formatted_text = extract_scope_smart_ai(
+                st.session_state.tor_raw_text,
+                st.session_state.gemini_key
+            )
             
             progress_bar.progress(30)
             
@@ -449,17 +420,14 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
             matched_products, result_df = analyze_tor_sentences_full_mode(
                 sentences,
                 st.session_state.spec_df,
-                gemini_key
+                st.session_state.gemini_key
             )
             progress_bar.progress(70)
             
-            # STEP 4: FR/NFR Classification (if enabled)
-            if enable_fr_nfr and gemini_key:
-                status_text.text("📊 Bonus: FR/NFR Classification...")
-                requirement_types = classify_scope_hybrid(sentences, gemini_key)
-                result_df['Requirement_Type'] = requirement_types
-            else:
-                result_df['Requirement_Type'] = 'Functional'
+            # STEP 4: FR/NFR Classification (Always enabled)
+            status_text.text("📊 Bonus: FR/NFR Classification...")
+            requirement_types = classify_scope_hybrid(sentences, st.session_state.gemini_key)
+            result_df['Requirement_Type'] = requirement_types
             
             progress_bar.progress(100)
             
@@ -511,14 +479,14 @@ if st.session_state.analysis_done:
                 "Product_Match": None,
                 "Implementation": None,
                 
-                # TOR Sentence
+                # No. (Index)
                 "TOR_Sentence": st.column_config.TextColumn(
-                    "TOR Sentence",
+                    "Requirement",
                     width="large",
                     help="Original requirement text"
                 ),
                 
-                # Product checkboxes
+                # ===== SELECTED PRODUCT GROUP =====
                 "Zocial Eye": st.column_config.CheckboxColumn(
                     "Zocial Eye",
                     help="Check if this product applies",
@@ -545,7 +513,7 @@ if st.session_state.analysis_done:
                     default=False
                 ),
                 
-                # Implementation checkboxes
+                # ===== IMPLEMENTATION GROUP =====
                 "Standard": st.column_config.CheckboxColumn(
                     "Standard",
                     help="Standard implementation",
@@ -559,11 +527,11 @@ if st.session_state.analysis_done:
                 
                 # Other columns
                 "Matched_Keyword": st.column_config.TextColumn(
-                    "Matched Keyword",
+                    "Matched Spec",
                     width="medium"
                 ),
                 "Requirement_Type": st.column_config.SelectboxColumn(
-                    "Type",
+                    "Requirement Type",
                     options=["Functional", "Non-Functional"],
                     width="small"
                 )
@@ -572,11 +540,35 @@ if st.session_state.analysis_done:
             hide_index=False,
             use_container_width=True,
             num_rows="dynamic",
-            key="data_editor"
+            key="data_editor",
+            column_order=[
+                "TOR_Sentence",
+                "Zocial Eye", "Warroom", "Outsource", "Other Product", "Non-Compliant",
+                "Standard", "Customize/Integration",
+                "Matched_Keyword",
+                "Requirement_Type"
+            ]
         )
+        
+        # ===== VALIDATION: Non-Compliant Logic =====
+        # If Non-Compliant is selected in products, force Implementation to Non-Compliant only
+        for idx in edited_df.index:
+            if edited_df.loc[idx, 'Non-Compliant']:
+                # Force uncheck other products
+                edited_df.loc[idx, 'Zocial Eye'] = False
+                edited_df.loc[idx, 'Warroom'] = False
+                edited_df.loc[idx, 'Outsource'] = False
+                edited_df.loc[idx, 'Other Product'] = False
+                
+                # Force uncheck other implementations
+                edited_df.loc[idx, 'Standard'] = False
+                edited_df.loc[idx, 'Customize/Integration'] = False
         
         # Store edited data
         st.session_state.edited_df = edited_df
+        
+        # Validation message
+        st.info("ℹ️ **Rule:** If Non-Compliant is selected, all other options will be automatically unchecked.")
     
     with tab2:
         # Statistics
@@ -624,7 +616,7 @@ if st.session_state.analysis_done:
     with tab3:
         st.subheader("🔍 Search & Filter")
         
-        search_term = st.text_input("Search in TOR Sentence", "")
+        search_term = st.text_input("Search in Requirement", "")
         
         filter_product = st.multiselect(
             "Filter by Product",
@@ -656,8 +648,8 @@ if st.session_state.analysis_done:
         st.write(f"**Showing {len(filtered_df)} of {len(edited_df)} rows**")
         st.dataframe(filtered_df, use_container_width=True, hide_index=False)
 
-# ===== STEP 4: BUDGET CALCULATION =====
-if st.session_state.analysis_done and enable_budget:
+# ===== STEP 4: BUDGET CALCULATION (Always enabled) =====
+if st.session_state.analysis_done:
     st.markdown('<p class="step-header">4️⃣ Budget Estimation</p>', unsafe_allow_html=True)
     
     if not st.session_state.budget_calculated:
@@ -666,7 +658,7 @@ if st.session_state.analysis_done and enable_budget:
                 try:
                     budget_factors = extract_budget_factors(
                         st.session_state.tor_raw_text,
-                        gemini_key
+                        st.session_state.gemini_key
                     )
                     
                     st.session_state.budget_factors = budget_factors
@@ -852,7 +844,7 @@ st.divider()
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.caption("WiseSight TOR Analyzer v2.0")
+    st.caption("WiseSight TOR Analyzer v2.1")
 with col2:
     st.caption("Powered by Streamlit + Gemini AI")
 with col3:
