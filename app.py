@@ -211,6 +211,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
+# API KEY CONFIGURATION (FROM SECRETS)
+# ==========================================
+
+try:
+    # ดึง API key จาก Streamlit secrets
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    api_key_status = "✅ Connected"
+    api_key_available = True
+except Exception as e:
+    GEMINI_API_KEY = None
+    api_key_status = "❌ Not configured"
+    api_key_available = False
+
+# ==========================================
 # SESSION STATE INITIALIZATION
 # ==========================================
 
@@ -236,8 +250,6 @@ if 'tor_raw_text' not in st.session_state:
     st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state:
     st.session_state.matched_products = []
-if 'gemini_key' not in st.session_state:
-    st.session_state.gemini_key = None
 
 # ==========================================
 # SIDEBAR - CONFIGURATION
@@ -246,28 +258,27 @@ if 'gemini_key' not in st.session_state:
 with st.sidebar:
     st.title("🔧 Configuration")
     
-    # ===== 1. API KEYS (HIDDEN INPUT) =====
+    # ===== API KEY STATUS =====
     st.subheader("🔐 API Keys")
-    
-    # Secure input - never display the key
-    gemini_key_input = st.text_input(
-        "Gemini API Key",
-        type="password",
-        value=st.session_state.gemini_key or "",
-        help="Enter your Gemini API key (will be hidden)",
-        key="gemini_api_input"
-    )
-    
-    # Store in session without displaying
-    if gemini_key_input:
-        st.session_state.gemini_key = gemini_key_input
-        st.success("✅ API Key configured")
+    if api_key_available:
+        st.success(f"Gemini API: {api_key_status}")
     else:
-        st.warning("⚠️ API Key required")
+        st.error(f"Gemini API: {api_key_status}")
+        st.warning("""
+        ⚠️ **API Key Required**
+        
+        Please configure in Streamlit Cloud:
+        1. Go to **Settings** (⚙️)
+        2. Click **Secrets**
+        3. Add:
+```
+        GEMINI_API_KEY = "your-api-key-here"
+```
+        """)
     
     st.divider()
     
-    # ===== 2. GOOGLE SHEET =====
+    # ===== GOOGLE SHEET =====
     st.subheader("📊 Google Sheet")
     sheet_url = st.text_input(
         "Sheet URL",
@@ -289,7 +300,36 @@ with st.sidebar:
     
     st.divider()
     
-    # ===== 3. SAVE HISTORY =====
+    # ===== OPTIONS =====
+    st.subheader("⚙️ Options")
+    
+    enable_ai_formatting = st.checkbox(
+        "🤖 AI Text Formatting",
+        value=True,
+        disabled=not api_key_available,
+        help="Use AI to clean and format TOR text"
+    )
+    
+    enable_fr_nfr = st.checkbox(
+        "📊 FR/NFR Classification",
+        value=True,
+        disabled=not api_key_available,
+        help="Classify Functional vs Non-Functional requirements"
+    )
+    
+    enable_budget = st.checkbox(
+        "💰 Budget Engine",
+        value=True,
+        disabled=not api_key_available,
+        help="Calculate budget estimation"
+    )
+    
+    if not api_key_available:
+        st.info("💡 Configure API key to enable AI features")
+    
+    st.divider()
+    
+    # ===== SAVE HISTORY =====
     st.subheader("📜 Save History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
@@ -315,7 +355,21 @@ with st.sidebar:
 st.markdown('<p class="main-header">🔍 WiseSight TOR Analyzer</p>', unsafe_allow_html=True)
 st.caption("AI-powered compliance checking with interactive verification & budget estimation")
 
-# Progress bar
+# Warning if API key not available
+if not api_key_available:
+    st.warning("""
+    ⚠️ **Gemini API Key Not Configured**
+    
+    Some features will be limited. Please configure API key in Streamlit Cloud settings.
+    
+    **How to configure:**
+    1. Click **Manage app** (bottom right)
+    2. Go to **Settings** → **Secrets**
+    3. Add: `GEMINI_API_KEY = "your-api-key"`
+    4. Click **Save**
+    """)
+
+# Progress bar (เดิม)
 progress_steps = []
 if st.session_state.file_uploaded:
     progress_steps.append("📂 File Uploaded")
@@ -328,51 +382,7 @@ if progress_steps:
     st.info(" → ".join(progress_steps))
 
 # ===== STEP 1: FILE UPLOAD =====
-st.markdown('<p class="step-header">1️⃣ Upload TOR File</p>', unsafe_allow_html=True)
-
-col1, col2 = st.columns([3, 1])
-
-with col1:
-    uploaded_file = st.file_uploader(
-        "Choose TOR file",
-        type=['pdf', 'docx', 'txt', 'xlsx', 'xls'],
-        help="Supported formats: PDF, Word, Excel, Text"
-    )
-
-with col2:
-    if uploaded_file:
-        st.metric("File Size", f"{uploaded_file.size / 1024:.1f} KB")
-
-if uploaded_file and not st.session_state.file_uploaded:
-    with st.spinner("📂 Reading file..."):
-        try:
-            # Read file content
-            file_content = read_file_content(uploaded_file)
-            
-            # Load master data if not loaded
-            if st.session_state.spec_df is None:
-                with st.spinner("🔄 Loading master data from Google Sheet..."):
-                    pricing_df, addon_df, spec_df, def_dict = load_master_data(sheet_url)
-                    st.session_state.pricing_df = pricing_df
-                    st.session_state.addon_df = addon_df
-                    st.session_state.spec_df = spec_df
-                    st.session_state.def_dict = def_dict
-            
-            # Store in session
-            st.session_state.tor_raw_text = file_content
-            st.session_state.file_name = uploaded_file.name
-            st.session_state.file_uploaded = True
-            
-            # Display preview
-            with st.expander("👀 Preview Raw Text", expanded=False):
-                st.text_area("Raw content", file_content[:2000] + "...", height=200, disabled=True)
-            
-            st.success(f"✅ File loaded: {uploaded_file.name} ({len(file_content)} characters)")
-            
-        except Exception as e:
-            st.error(f"❌ Error reading file: {e}")
-            import traceback
-            st.code(traceback.format_exc())
+# ... (code เดิม แต่เปลี่ยน gemini_key เป็น GEMINI_API_KEY)
 
 # ===== STEP 2: AI ANALYSIS =====
 if st.session_state.file_uploaded and not st.session_state.analysis_done:
@@ -387,26 +397,27 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
     with col3:
         st.info("📊 **FR/NFR Classification**\nFunctional vs Non-Functional")
     
+    # Check API key before analysis
+    if not api_key_available:
+        st.error("❌ Cannot start analysis: API key not configured")
+        st.stop()
+    
     if st.button("🚀 Start Analysis", type="primary", use_container_width=True):
-        
-        # Check API key
-        if not st.session_state.gemini_key:
-            st.error("❌ Please enter Gemini API Key in sidebar")
-            st.stop()
-        
-        # Progress tracking
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         try:
-            # STEP 1: AI Text Formatting (Always enabled)
+            # STEP 1: AI Text Formatting
             status_text.text("🤖 Step 1/3: AI Text Formatting...")
             progress_bar.progress(10)
             
-            formatted_text = extract_scope_smart_ai(
-                st.session_state.tor_raw_text,
-                st.session_state.gemini_key
-            )
+            if enable_ai_formatting:
+                formatted_text = extract_scope_smart_ai(
+                    st.session_state.tor_raw_text,
+                    GEMINI_API_KEY  # ← เปลี่ยนจาก gemini_key
+                )
+            else:
+                formatted_text = st.session_state.tor_raw_text
             
             progress_bar.progress(30)
             
@@ -420,14 +431,17 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
             matched_products, result_df = analyze_tor_sentences_full_mode(
                 sentences,
                 st.session_state.spec_df,
-                st.session_state.gemini_key
+                GEMINI_API_KEY  # ← เปลี่ยนจาก gemini_key
             )
             progress_bar.progress(70)
             
-            # STEP 4: FR/NFR Classification (Always enabled)
-            status_text.text("📊 Bonus: FR/NFR Classification...")
-            requirement_types = classify_scope_hybrid(sentences, st.session_state.gemini_key)
-            result_df['Requirement_Type'] = requirement_types
+            # STEP 4: FR/NFR Classification (if enabled)
+            if enable_fr_nfr:
+                status_text.text("📊 Bonus: FR/NFR Classification...")
+                requirement_types = classify_scope_hybrid(sentences, GEMINI_API_KEY)  # ← เปลี่ยน
+                result_df['Requirement_Type'] = requirement_types
+            else:
+                result_df['Requirement_Type'] = 'Functional'
             
             progress_bar.progress(100)
             
@@ -658,7 +672,7 @@ if st.session_state.analysis_done:
                 try:
                     budget_factors = extract_budget_factors(
                         st.session_state.tor_raw_text,
-                        st.session_state.gemini_key
+                        st.session_state.GEMINI_API_KEY
                     )
                     
                     st.session_state.budget_factors = budget_factors
