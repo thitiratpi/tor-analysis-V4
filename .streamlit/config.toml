@@ -4,10 +4,29 @@
 
 # ===== THEME CONFIGURATION =====
 [theme]
-primaryColor = "#FF4B4B"
-backgroundColor = "#0E1117"
-secondaryBackgroundColor = "#262730"
-textColor = "#FAFAFA"
+# สีหลัก (ปุ่ม, link, highlights)
+# ค่าเริ่มต้น: #FF4B4B (แดง Streamlit)
+# ตัวอย่าง: "#667eea" (ม่วงน้ำเงิน), "#1E88E5" (น้ำเงิน)
+primaryColor = "#667eea"
+
+# สีพื้นหลัง (หน้าจอหลัก)
+# ค่าเริ่มต้น: #FFFFFF (ขาว)
+# ตัวอย่าง: "#f0f2f6" (เทาอ่อน)
+backgroundColor = "#f0f2f6"
+
+# สีพื้นหลังส่วนรอง (sidebar, widgets)
+# ค่าเริ่มต้น: #F0F2F6 (เทาอ่อน)
+# ตัวอย่าง: "#ffffff" (ขาว)
+secondaryBackgroundColor = "#ffffff"
+
+# สีข้อความ (ตัวหนังสือ)
+# ค่าเริ่มต้น: #262730 (เทาเข้ม)
+# ตัวอย่าง: "#262730" (เกือบดำ)
+textColor = "#262730"
+
+# Font ที่ใช้
+# ค่าเริ่มต้น: "sans serif"
+# ตัวอย่าง: "sans serif", "serif", "monospace"
 font = "sans serif"
 
 # ===== SERVER CONFIGURATION =====
