@@ -513,16 +513,20 @@ if st.session_state.analysis_done:
     # Prepare editable dataframe
     df = st.session_state.processed_df.copy()
     
-    # Split multi-products into checkbox columns
+    # Define product and implementation options
     product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
     impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
     
-    # Create checkbox columns
+    # Create checkbox columns with grouped naming
+    # Selected Product group
     for prod in product_options:
-        df[prod] = df['Product_Match'].apply(lambda x: prod in str(x))
+        col_name = f"📦 {prod}"  # Add icon for visual grouping
+        df[col_name] = df['Product_Match'].apply(lambda x: prod in str(x))
     
+    # Implementation group
     for impl in impl_options:
-        df[impl] = df['Implementation'].apply(lambda x: impl in str(x))
+        col_name = f"🔧 {impl}"  # Add icon for visual grouping
+        df[col_name] = df['Implementation'].apply(lambda x: impl in str(x))
     
     # Tabs for different views
     tab1, tab2, tab3 = st.tabs(["📊 Data Editor", "📈 Statistics", "🔍 Filter & Search"])
@@ -530,106 +534,152 @@ if st.session_state.analysis_done:
     with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
         
+        # Column configuration
+        column_config = {
+            # Hide original columns
+            "Product_Match": None,
+            "Implementation": None,
+            
+            # Main columns
+            "TOR_Sentence": st.column_config.TextColumn(
+                "Requirement",
+                width="large",
+                help="Original requirement text from TOR"
+            ),
+            "Matched_Keyword": st.column_config.TextColumn(
+                "Matched Spec",
+                width="medium",
+                help="Matched specification from master data"
+            ),
+            "Requirement_Type": st.column_config.SelectboxColumn(
+                "Requirement Type",
+                options=["Functional", "Non-Functional"],
+                width="medium",
+                help="FR (Functional) or NFR (Non-Functional)"
+            ),
+            
+            # ===== SELECTED PRODUCT GROUP =====
+            "📦 Zocial Eye": st.column_config.CheckboxColumn(
+                "Zocial Eye",
+                help="Social media monitoring platform",
+                default=False,
+                width="small"
+            ),
+            "📦 Warroom": st.column_config.CheckboxColumn(
+                "Warroom",
+                help="Customer engagement platform",
+                default=False,
+                width="small"
+            ),
+            "📦 Outsource": st.column_config.CheckboxColumn(
+                "Outsource",
+                help="External development required",
+                default=False,
+                width="small"
+            ),
+            "📦 Other Product": st.column_config.CheckboxColumn(
+                "Other Product",
+                help="Other WiseSight products",
+                default=False,
+                width="small"
+            ),
+            "📦 Non-Compliant": st.column_config.CheckboxColumn(
+                "Non-Compliant",
+                help="Does not match any product",
+                default=False,
+                width="small"
+            ),
+            
+            # ===== IMPLEMENTATION GROUP =====
+            "🔧 Standard": st.column_config.CheckboxColumn(
+                "Standard",
+                help="Standard package implementation",
+                default=False,
+                width="small"
+            ),
+            "🔧 Customize/Integration": st.column_config.CheckboxColumn(
+                "Customize",
+                help="Custom development or integration required",
+                default=False,
+                width="small"
+            ),
+            "🔧 Non-Compliant": st.column_config.CheckboxColumn(
+                "Non-Compliant",
+                help="Cannot be implemented",
+                default=False,
+                width="small"
+            ),
+        }
+        
+        # Display grouped header info
+        st.markdown("""
+        <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
+            <strong>Column Groups:</strong><br>
+            📦 = <strong>Selected Product</strong> (Zocial Eye, Warroom, Outsource, Other Product, Non-Compliant)<br>
+            🔧 = <strong>Implementation</strong> (Standard, Customize/Integration, Non-Compliant)
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Data editor with proper column order
         edited_df = st.data_editor(
             df,
-            column_config={
-                # Hide original columns
-                "Product_Match": None,
-                "Implementation": None,
-                
-                # No. (Index)
-                "TOR_Sentence": st.column_config.TextColumn(
-                    "Requirement",
-                    width="large",
-                    help="Original requirement text"
-                ),
-                
-                # ===== SELECTED PRODUCT GROUP =====
-                "Zocial Eye": st.column_config.CheckboxColumn(
-                    "Zocial Eye",
-                    help="Check if this product applies",
-                    default=False
-                ),
-                "Warroom": st.column_config.CheckboxColumn(
-                    "Warroom",
-                    help="Check if this product applies",
-                    default=False
-                ),
-                "Outsource": st.column_config.CheckboxColumn(
-                    "Outsource",
-                    help="Check if this product applies",
-                    default=False
-                ),
-                "Other Product": st.column_config.CheckboxColumn(
-                    "Other Product",
-                    help="Check if this product applies",
-                    default=False
-                ),
-                "Non-Compliant": st.column_config.CheckboxColumn(
-                    "Non-Compliant",
-                    help="Check if non-compliant",
-                    default=False
-                ),
-                
-                # ===== IMPLEMENTATION GROUP =====
-                "Standard": st.column_config.CheckboxColumn(
-                    "Standard",
-                    help="Standard implementation",
-                    default=False
-                ),
-                "Customize/Integration": st.column_config.CheckboxColumn(
-                    "Customize",
-                    help="Custom/Integration needed",
-                    default=False
-                ),
-                
-                # Other columns
-                "Matched_Keyword": st.column_config.TextColumn(
-                    "Matched Spec",
-                    width="medium"
-                ),
-                "Requirement_Type": st.column_config.SelectboxColumn(
-                    "Requirement Type",
-                    options=["Functional", "Non-Functional"],
-                    width="small"
-                )
-            },
+            column_config=column_config,
             disabled=["TOR_Sentence", "Matched_Keyword"],
             hide_index=False,
             use_container_width=True,
             num_rows="dynamic",
             key="data_editor",
             column_order=[
+                # Main columns first
                 "TOR_Sentence",
-                "Zocial Eye", "Warroom", "Outsource", "Other Product", "Non-Compliant",
-                "Standard", "Customize/Integration",
                 "Matched_Keyword",
-                "Requirement_Type"
+                "Requirement_Type",
+                # Selected Product group
+                "📦 Zocial Eye",
+                "📦 Warroom",
+                "📦 Outsource",
+                "📦 Other Product",
+                "📦 Non-Compliant",
+                # Implementation group
+                "🔧 Standard",
+                "🔧 Customize/Integration",
+                "🔧 Non-Compliant"
             ]
         )
         
-        # ===== VALIDATION: Non-Compliant Logic =====
-        # If Non-Compliant is selected in products, force Implementation to Non-Compliant only
+        # ===== VALIDATION LOGIC =====
+        # Rule 1: If Product Non-Compliant is checked → uncheck all products and implementations
         for idx in edited_df.index:
-            if edited_df.loc[idx, 'Non-Compliant']:
-                # Force uncheck other products
-                edited_df.loc[idx, 'Zocial Eye'] = False
-                edited_df.loc[idx, 'Warroom'] = False
-                edited_df.loc[idx, 'Outsource'] = False
-                edited_df.loc[idx, 'Other Product'] = False
+            if edited_df.loc[idx, '📦 Non-Compliant']:
+                # Uncheck other products
+                edited_df.loc[idx, '📦 Zocial Eye'] = False
+                edited_df.loc[idx, '📦 Warroom'] = False
+                edited_df.loc[idx, '📦 Outsource'] = False
+                edited_df.loc[idx, '📦 Other Product'] = False
                 
-                # Force uncheck other implementations
-                edited_df.loc[idx, 'Standard'] = False
-                edited_df.loc[idx, 'Customize/Integration'] = False
+                # Force Implementation to Non-Compliant only
+                edited_df.loc[idx, '🔧 Standard'] = False
+                edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                edited_df.loc[idx, '🔧 Non-Compliant'] = True
+        
+        # Rule 2: If Implementation Non-Compliant is checked → uncheck other implementations
+        for idx in edited_df.index:
+            if edited_df.loc[idx, '🔧 Non-Compliant']:
+                edited_df.loc[idx, '🔧 Standard'] = False
+                edited_df.loc[idx, '🔧 Customize/Integration'] = False
         
         # Store edited data
         st.session_state.edited_df = edited_df
         
-        # Validation message
-        st.info("ℹ️ **Rule:** If Non-Compliant is selected, all other options will be automatically unchecked.")
+        # Display validation rules
+        st.info("""
+        ℹ️ **Validation Rules:**
+        - If **Product Non-Compliant** is selected → All other products unchecked + Implementation forced to Non-Compliant
+        - If **Implementation Non-Compliant** is selected → Standard and Customize unchecked
+        """)
     
     with tab2:
-        # Statistics
+        # Statistics (update to use new column names)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -637,7 +687,7 @@ if st.session_state.analysis_done:
             st.metric("Total Requirements", total_rows)
         
         with col2:
-            non_compliant = edited_df['Non-Compliant'].sum()
+            non_compliant = edited_df['📦 Non-Compliant'].sum()
             st.metric("Non-Compliant", non_compliant, delta=f"-{non_compliant}", delta_color="inverse")
         
         with col3:
@@ -646,7 +696,7 @@ if st.session_state.analysis_done:
         
         with col4:
             multi_product = sum(
-                edited_df[['Zocial Eye', 'Warroom', 'Outsource', 'Other Product']].sum(axis=1) > 1
+                edited_df[['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']].sum(axis=1) > 1
             )
             st.metric("Multi-Product", multi_product)
         
@@ -656,20 +706,29 @@ if st.session_state.analysis_done:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Product distribution
+            st.markdown("**Product Distribution**")
             product_counts = {
-                'Zocial Eye': edited_df['Zocial Eye'].sum(),
-                'Warroom': edited_df['Warroom'].sum(),
-                'Outsource': edited_df['Outsource'].sum(),
-                'Other Product': edited_df['Other Product'].sum(),
-                'Non-Compliant': edited_df['Non-Compliant'].sum()
+                'Zocial Eye': edited_df['📦 Zocial Eye'].sum(),
+                'Warroom': edited_df['📦 Warroom'].sum(),
+                'Outsource': edited_df['📦 Outsource'].sum(),
+                'Other Product': edited_df['📦 Other Product'].sum(),
+                'Non-Compliant': edited_df['📦 Non-Compliant'].sum()
             }
             st.bar_chart(product_counts)
         
         with col2:
-            # FR/NFR distribution
+            st.markdown("**Requirement Type Distribution**")
             fr_nfr_counts = edited_df['Requirement_Type'].value_counts()
             st.bar_chart(fr_nfr_counts)
+        
+        # Implementation distribution
+        st.markdown("**Implementation Distribution**")
+        impl_counts = {
+            'Standard': edited_df['🔧 Standard'].sum(),
+            'Customize/Integration': edited_df['🔧 Customize/Integration'].sum(),
+            'Non-Compliant': edited_df['🔧 Non-Compliant'].sum()
+        }
+        st.bar_chart(impl_counts)
     
     with tab3:
         st.subheader("🔍 Search & Filter")
@@ -678,7 +737,13 @@ if st.session_state.analysis_done:
         
         filter_product = st.multiselect(
             "Filter by Product",
-            product_options,
+            ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant'],
+            default=[]
+        )
+        
+        filter_impl = st.multiselect(
+            "Filter by Implementation",
+            ['Standard', 'Customize/Integration', 'Non-Compliant'],
             default=[]
         )
         
@@ -697,14 +762,31 @@ if st.session_state.analysis_done:
             ]
         
         if filter_product:
-            mask = filtered_df[filter_product].any(axis=1)
+            # Map to column names
+            prod_cols = [f'📦 {p}' for p in filter_product]
+            mask = filtered_df[prod_cols].any(axis=1)
+            filtered_df = filtered_df[mask]
+        
+        if filter_impl:
+            # Map to column names
+            impl_cols = [f'🔧 {i}' for i in filter_impl]
+            mask = filtered_df[impl_cols].any(axis=1)
             filtered_df = filtered_df[mask]
         
         if filter_type:
             filtered_df = filtered_df[filtered_df['Requirement_Type'].isin(filter_type)]
         
         st.write(f"**Showing {len(filtered_df)} of {len(edited_df)} rows**")
-        st.dataframe(filtered_df, use_container_width=True, hide_index=False)
+        
+        # Display filtered data with same column order
+        display_cols = [
+            "TOR_Sentence",
+            "Matched_Keyword",
+            "Requirement_Type",
+            "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
+            "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant"
+        ]
+        st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=False)
 
 # ===== STEP 4: BUDGET CALCULATION (Always enabled) =====
 if st.session_state.analysis_done:
