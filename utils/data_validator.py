@@ -7,45 +7,41 @@ import re
 
 def prepare_save_data(edited_df, product_options, impl_options):
     """
-    Convert edited DataFrame to save format
-    Expands multi-product rows into separate rows
+    Prepare data for saving to Google Sheet
+    Convert checkbox columns to final format
     """
     save_rows = []
     
-    for _, row in edited_df.iterrows():
-        # Get selected products
+    for idx, row in edited_df.iterrows():
+        # Get selected products (remove emoji prefix)
         selected_products = [
-            prod for prod in product_options
-            if row.get(prod, False) == True and prod != 'Non-Compliant'
+            prod for prod in product_options 
+            if row.get(f'📦 {prod}', False)
         ]
         
-        # Get selected implementations
+        # Get selected implementations (remove emoji prefix)
         selected_impls = [
-            impl for impl in impl_options
-            if row.get(impl, False) == True and impl != 'Non-Compliant'
+            impl for impl in impl_options 
+            if row.get(f'🔧 {impl}', False)
         ]
-        
-        # Skip if Non-Compliant
-        if row.get('Non-Compliant', False):
-            continue
         
         # Skip if no product selected
-        if len(selected_products) == 0:
+        if not selected_products:
             continue
         
         # Detect language
         sentence = row['TOR_Sentence']
         is_thai = bool(re.search(r'[ก-ฮ]', sentence))
         
-        # Create rows for each product
+        # Create rows for each product x implementation combination
         for product in selected_products:
-            for impl in (selected_impls if selected_impls else ['Standard']):
+            for implementation in selected_impls:
                 save_rows.append({
                     'Product': product,
                     'Sentence_TH': sentence if is_thai else '',
                     'Sentence_ENG': sentence if not is_thai else '',
-                    'Implementation': impl,
-                    'TOR_Sentence': sentence  # For duplicate check
+                    'Implementation': implementation,
+                    'TOR_Sentence': sentence  # For duplicate checking
                 })
     
     return pd.DataFrame(save_rows)
