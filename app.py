@@ -515,11 +515,38 @@ if st.session_state.analysis_done:
         col_name = f"🔧 {impl}"
         df[col_name] = df['Implementation'].apply(lambda x: impl in str(x))
     
+    # ✅ Create custom index starting from 1 with name "No."
+    df.index = range(1, len(df) + 1)
+    df.index.name = 'No.'
+    
     # Tabs for different views
     tab1, tab2, tab3 = st.tabs(["📊 Data Editor", "📈 Statistics", "🔍 Filter & Search"])
     
     with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
+        
+        # ✅ Add CSS for text wrapping
+        st.markdown("""
+        <style>
+        /* Text wrapping for data editor cells */
+        .stDataFrame [data-testid="stDataFrameResizeHandle"] {
+            display: block !important;
+        }
+        
+        /* Enable word wrap */
+        div[data-testid="stDataFrame"] div[data-testid="data-grid-canvas"] {
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        /* Specific wrapping for requirement column */
+        div[data-testid="stDataFrame"] [aria-colindex="2"] {
+            word-wrap: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
         # Column configuration
         column_config = {
@@ -532,11 +559,6 @@ if st.session_state.analysis_done:
                 "Requirement",
                 width="large",
                 help="Original requirement text from TOR"
-            ),
-            "Matched_Keyword": st.column_config.TextColumn(
-                "Matched Spec",
-                width="medium",
-                help="Matched specification from master data"
             ),
             "Requirement_Type": st.column_config.SelectboxColumn(
                 "Requirement Type",
@@ -596,6 +618,13 @@ if st.session_state.analysis_done:
                 default=False,
                 width="small"
             ),
+            
+            # ✅ Matched Spec - moved to end
+            "Matched_Keyword": st.column_config.TextColumn(
+                "Matched Spec",
+                width="medium",
+                help="Matched specification from master data"
+            ),
         }
         
         # Display grouped header info
@@ -607,21 +636,32 @@ if st.session_state.analysis_done:
         </div>
         """, unsafe_allow_html=True)
         
-        # Data editor
+        # ✅ Data editor with new column order (Matched Spec at end)
         edited_df = st.data_editor(
             df,
             column_config=column_config,
             disabled=["TOR_Sentence", "Matched_Keyword"],
-            hide_index=False,
+            hide_index=False,  # Show index with custom name "No."
             use_container_width=True,
             num_rows="dynamic",
             key="data_editor",
             column_order=[
+                # Main column first
                 "TOR_Sentence",
-                "Matched_Keyword",
+                # Requirement Type
                 "Requirement_Type",
-                "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
-                "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant"
+                # Selected Product group
+                "📦 Zocial Eye", 
+                "📦 Warroom", 
+                "📦 Outsource", 
+                "📦 Other Product", 
+                "📦 Non-Compliant",
+                # Implementation group
+                "🔧 Standard", 
+                "🔧 Customize/Integration", 
+                "🔧 Non-Compliant",
+                # ✅ Matched Spec moved to end
+                "Matched_Keyword"
             ]
         )
         
@@ -745,12 +785,13 @@ if st.session_state.analysis_done:
         
         st.write(f"**Showing {len(filtered_df)} of {len(edited_df)} rows**")
         
+        # ✅ Updated display column order
         display_cols = [
             "TOR_Sentence",
-            "Matched_Keyword",
             "Requirement_Type",
             "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
-            "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant"
+            "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
+            "Matched_Keyword"  # ✅ Moved to end
         ]
         st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=False)
 
