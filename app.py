@@ -213,41 +213,55 @@ if 'is_excel' not in st.session_state:
 with st.sidebar:
     st.title("🔧 Configuration")
     
-    # ===== 1. API KEYS (SECURE) =====
-    st.subheader("🔐 API Keys")
+    # ===== 1. API STATUS (AUTO-LOAD FROM SECRETS) =====
+    st.subheader("🔐 API Status")
     
-    if st.session_state.gemini_key:
-        st.success("✅ Gemini API: Connected")
+    try:
+        # Try to load from Streamlit secrets
+        if 'gemini_key' not in st.session_state or st.session_state.gemini_key is None:
+            st.session_state.gemini_key = st.secrets["GEMINI_API_KEY"]
         
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔄 Update", use_container_width=True, key="update_key"):
-                st.session_state.gemini_key = None
-                st.rerun()
-        with col2:
-            if st.button("🗑️ Clear", use_container_width=True, key="clear_key"):
-                st.session_state.gemini_key = None
-                st.rerun()
-    else:
-        st.error("❌ Gemini API: Not configured")
+        # Success - show connected status
+        st.markdown("""
+        <div style='background-color: #d4edda; padding: 12px; border-radius: 8px; border-left: 4px solid #28a745;'>
+            <p style='margin: 0; color: #155724; font-weight: 600;'>
+                ✅ Gemini AI: Connected
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with st.expander("🔑 Configure API Key", expanded=True):
-            st.info("💡 Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)")
+        st.caption("🔗 Loaded from Streamlit secrets")
+        
+    except Exception as e:
+        # Failed - show error
+        st.markdown("""
+        <div style='background-color: #f8d7da; padding: 12px; border-radius: 8px; border-left: 4px solid #dc3545;'>
+            <p style='margin: 0; color: #721c24; font-weight: 600;'>
+                ❌ Gemini AI: Not configured
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.expander("⚙️ How to configure", expanded=False):
+            st.markdown("""
+            **Step 1:** Go to App Settings
+            - Click **Manage app** (⋮ menu)
+            - Select **Settings** ⚙️
             
-            api_key_input = st.text_input(
-                "Enter your API key",
-                type="password",
-                key="secure_api_input",
-                help="Your key is stored securely and never displayed"
-            )
+            **Step 2:** Add Secret
+            - Click **Secrets** tab 🔐
+            - Add the following:
+```toml
+            GEMINI_API_KEY = "AIzaSy..."
+```
             
-            if st.button("✅ Save & Connect", type="primary", use_container_width=True):
-                if api_key_input and len(api_key_input) > 20:
-                    st.session_state.gemini_key = api_key_input
-                    st.success("🎉 Connected!")
-                    st.rerun()
-                else:
-                    st.error("⚠️ Please enter a valid API key")
+            **Step 3:** Reboot App
+            - Click **Reboot app** to apply changes
+            
+            **Get API Key:** [Google AI Studio](https://makersuite.google.com/app/apikey)
+            """)
+        
+        st.session_state.gemini_key = None
     
     st.divider()
     
