@@ -206,6 +206,12 @@ if 'gemini_key' not in st.session_state:
 if 'is_excel' not in st.session_state:
     st.session_state.is_excel = False
 
+# ✅ Initialize API key from secrets
+if 'gemini_key' not in st.session_state:
+    try:
+        st.session_state.gemini_key = st.secrets["GEMINI_API_KEY"]
+    except:
+        st.session_state.gemini_key = None
 # ==========================================
 # SIDEBAR - CONFIGURATION
 # ==========================================
