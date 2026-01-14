@@ -1,8 +1,16 @@
 """
 ================================================================================
-WISESIGHT STREAMLIT APP V2.1 - REVISED
+WISESIGHT STREAMLIT APP V2.1 - COMPLETE
 ================================================================================
 Full-featured TOR Analysis with Budget Engine
+- Advanced file reading (PDF/Word/Excel)
+- AI text formatting (optional)
+- Product matching (multi-product)
+- FR/NFR classification (optional)
+- Budget estimation
+- Interactive verification
+- Google Sheet integration
+================================================================================
 """
 
 import streamlit as st
@@ -122,10 +130,6 @@ st.markdown("""
         font-weight: bold;
     }
     
-    [data-testid="stMetricDelta"] {
-        font-size: 1rem;
-    }
-    
     /* ===== FILE UPLOADER ===== */
     [data-testid="stFileUploader"] {
         border: 2px dashed #1f77b4;
@@ -143,27 +147,6 @@ st.markdown("""
     /* ===== SIDEBAR STYLES ===== */
     [data-testid="stSidebar"] {
         background-color: #f8f9fa;
-    }
-    
-    [data-testid="stSidebar"] .element-container {
-        margin-bottom: 1rem;
-    }
-    
-    /* ===== EXPANDER STYLES ===== */
-    .streamlit-expanderHeader {
-        font-weight: 600;
-        font-size: 1.1rem;
-        background-color: #f0f2f6;
-        border-radius: 5px;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background-color: #e0e2e6;
-    }
-    
-    /* ===== PROGRESS BAR ===== */
-    .stProgress > div > div > div > div {
-        background-color: #1f77b4;
     }
     
     /* ===== TABS ===== */
@@ -186,43 +169,11 @@ st.markdown("""
         color: white;
     }
     
-    /* ===== DOWNLOAD BUTTON ===== */
-    .stDownloadButton > button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-    }
-    
-    .stDownloadButton > button:hover {
-        background-color: #218838;
-    }
-    
-    /* ===== DIVIDER ===== */
-    hr {
-        margin: 2rem 0;
-        border: none;
-        border-top: 2px solid #e0e2e6;
-    }
-    
     /* ===== HIDE STREAMLIT BRANDING ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
-
-# ==========================================
-# API KEY CONFIGURATION (FROM SECRETS)
-# ==========================================
-
-try:
-    # ดึง API key จาก Streamlit secrets
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-    api_key_status = "✅ Connected"
-    api_key_available = True
-except Exception as e:
-    GEMINI_API_KEY = None
-    api_key_status = "❌ Not configured"
-    api_key_available = False
 
 # ==========================================
 # SESSION STATE INITIALIZATION
@@ -250,6 +201,10 @@ if 'tor_raw_text' not in st.session_state:
     st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state:
     st.session_state.matched_products = []
+if 'gemini_key' not in st.session_state:
+    st.session_state.gemini_key = None
+if 'is_excel' not in st.session_state:
+    st.session_state.is_excel = False
 
 # ==========================================
 # SIDEBAR - CONFIGURATION
@@ -258,27 +213,26 @@ if 'matched_products' not in st.session_state:
 with st.sidebar:
     st.title("🔧 Configuration")
     
-    # ===== API KEY STATUS =====
+    # ===== 1. API KEYS =====
     st.subheader("🔐 API Keys")
-    if api_key_available:
-        st.success(f"Gemini API: {api_key_status}")
+    
+    gemini_key_input = st.text_input(
+        "Gemini API Key",
+        type="password",
+        value=st.session_state.gemini_key or "",
+        help="Enter your Gemini API key (will be hidden)",
+        key="gemini_api_input"
+    )
+    
+    if gemini_key_input:
+        st.session_state.gemini_key = gemini_key_input
+        st.success("✅ API Key configured")
     else:
-        st.error(f"Gemini API: {api_key_status}")
-        st.warning("""
-        ⚠️ **API Key Required**
-        
-        Please configure in Streamlit Cloud:
-        1. Go to **Settings** (⚙️)
-        2. Click **Secrets**
-        3. Add:
-```
-        GEMINI_API_KEY = "your-api-key-here"
-```
-        """)
+        st.warning("⚠️ API Key required")
     
     st.divider()
     
-    # ===== GOOGLE SHEET =====
+    # ===== 2. GOOGLE SHEET =====
     st.subheader("📊 Google Sheet")
     sheet_url = st.text_input(
         "Sheet URL",
@@ -300,36 +254,26 @@ with st.sidebar:
     
     st.divider()
     
-    # ===== OPTIONS =====
-    st.subheader("⚙️ Options")
+    # ===== 3. ANALYSIS OPTIONS =====
+    st.subheader("⚙️ Analysis Options")
     
     enable_ai_formatting = st.checkbox(
         "🤖 AI Text Formatting",
         value=True,
-        disabled=not api_key_available,
-        help="Use AI to clean and format TOR text"
+        help="Use AI to clean and format TOR text (skipped for Excel files)"
     )
     
     enable_fr_nfr = st.checkbox(
         "📊 FR/NFR Classification",
         value=True,
-        disabled=not api_key_available,
         help="Classify Functional vs Non-Functional requirements"
     )
     
-    enable_budget = st.checkbox(
-        "💰 Budget Engine",
-        value=True,
-        disabled=not api_key_available,
-        help="Calculate budget estimation"
-    )
-    
-    if not api_key_available:
-        st.info("💡 Configure API key to enable AI features")
+    st.info("💡 Both features use Gemini API")
     
     st.divider()
     
-    # ===== SAVE HISTORY =====
+    # ===== 4. SAVE HISTORY =====
     st.subheader("📜 Save History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
@@ -355,21 +299,7 @@ with st.sidebar:
 st.markdown('<p class="main-header">🔍 WiseSight TOR Analyzer</p>', unsafe_allow_html=True)
 st.caption("AI-powered compliance checking with interactive verification & budget estimation")
 
-# Warning if API key not available
-if not api_key_available:
-    st.warning("""
-    ⚠️ **Gemini API Key Not Configured**
-    
-    Some features will be limited. Please configure API key in Streamlit Cloud settings.
-    
-    **How to configure:**
-    1. Click **Manage app** (bottom right)
-    2. Go to **Settings** → **Secrets**
-    3. Add: `GEMINI_API_KEY = "your-api-key"`
-    4. Click **Save**
-    """)
-
-# Progress bar (เดิม)
+# Progress bar
 progress_steps = []
 if st.session_state.file_uploaded:
     progress_steps.append("📂 File Uploaded")
@@ -417,6 +347,13 @@ if uploaded_file and not st.session_state.file_uploaded:
             st.session_state.file_name = uploaded_file.name
             st.session_state.file_uploaded = True
             
+            # Detect Excel file
+            if uploaded_file.name.endswith(('.xlsx', '.xls')):
+                st.session_state.is_excel = True
+                st.info("📊 Excel file detected: Will preserve row structure (AI formatting will be skipped)")
+            else:
+                st.session_state.is_excel = False
+            
             # Display preview
             with st.expander("👀 Preview Raw Text", expanded=False):
                 st.text_area("Raw content", file_content[:2000] + "...", height=200, disabled=True)
@@ -435,57 +372,70 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.info("🧠 **AI Text Formatting**\nClean & structure TOR text")
+        status = "✅ Enabled" if enable_ai_formatting else "⏭️ Skipped"
+        st.info(f"🧠 **AI Text Formatting**\nClean & structure TOR text\n\n{status}")
     with col2:
-        st.info("🎯 **Product Matching**\nMatch to Zocial Eye / Warroom")
+        st.info(f"🎯 **Product Matching**\nMatch to Zocial Eye / Warroom\n\n✅ Always Enabled")
     with col3:
-        st.info("📊 **FR/NFR Classification**\nFunctional vs Non-Functional")
-    
-    # Check API key before analysis
-    if not api_key_available:
-        st.error("❌ Cannot start analysis: API key not configured")
-        st.stop()
+        status = "✅ Enabled" if enable_fr_nfr else "⏭️ Skipped"
+        st.info(f"📊 **FR/NFR Classification**\nFunctional vs Non-Functional\n\n{status}")
     
     if st.button("🚀 Start Analysis", type="primary", use_container_width=True):
+        
+        # Check API key
+        if not st.session_state.gemini_key:
+            st.error("❌ Please enter Gemini API Key in sidebar")
+            st.stop()
+        
+        # Progress tracking
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         try:
-            # STEP 1: AI Text Formatting
-            status_text.text("🤖 Step 1/3: AI Text Formatting...")
+            # STEP 1: AI Text Formatting (OPTIONAL)
+            status_text.text("🤖 Step 1/4: AI Text Formatting...")
             progress_bar.progress(10)
             
-            if enable_ai_formatting:
+            if enable_ai_formatting and not st.session_state.is_excel:
                 formatted_text = extract_scope_smart_ai(
                     st.session_state.tor_raw_text,
-                    GEMINI_API_KEY  # ← เปลี่ยนจาก gemini_key
+                    st.session_state.gemini_key
                 )
             else:
                 formatted_text = st.session_state.tor_raw_text
+                if st.session_state.is_excel:
+                    print("   📊 Excel file: Skipping AI formatting to preserve structure")
+                else:
+                    print("   ⏭️ AI Formatting disabled by user")
             
             progress_bar.progress(30)
             
             # STEP 2: Extract sentences
-            status_text.text("📝 Step 2/3: Extracting sentences...")
+            status_text.text("📝 Step 2/4: Extracting sentences...")
             sentences = extract_sentences_from_tor(formatted_text)
             progress_bar.progress(40)
             
             # STEP 3: Product Matching
-            status_text.text("🎯 Step 3/3: Analyzing with AI...")
+            status_text.text("🎯 Step 3/4: Product Matching...")
             matched_products, result_df = analyze_tor_sentences_full_mode(
                 sentences,
                 st.session_state.spec_df,
-                GEMINI_API_KEY  # ← เปลี่ยนจาก gemini_key
+                st.session_state.gemini_key
             )
             progress_bar.progress(70)
             
-            # STEP 4: FR/NFR Classification (if enabled)
+            # STEP 4: FR/NFR Classification (OPTIONAL)
             if enable_fr_nfr:
-                status_text.text("📊 Bonus: FR/NFR Classification...")
-                requirement_types = classify_scope_hybrid(sentences, GEMINI_API_KEY)  # ← เปลี่ยน
+                status_text.text("📊 Step 4/4: FR/NFR Classification...")
+                requirement_types = classify_scope_hybrid(
+                    sentences, 
+                    st.session_state.gemini_key
+                )
                 result_df['Requirement_Type'] = requirement_types
             else:
+                # Default to Functional if disabled
                 result_df['Requirement_Type'] = 'Functional'
+                print("   ⏭️ FR/NFR Classification disabled by user")
             
             progress_bar.progress(100)
             
@@ -518,14 +468,12 @@ if st.session_state.analysis_done:
     impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
     
     # Create checkbox columns with grouped naming
-    # Selected Product group
     for prod in product_options:
-        col_name = f"📦 {prod}"  # Add icon for visual grouping
+        col_name = f"📦 {prod}"
         df[col_name] = df['Product_Match'].apply(lambda x: prod in str(x))
     
-    # Implementation group
     for impl in impl_options:
-        col_name = f"🔧 {impl}"  # Add icon for visual grouping
+        col_name = f"🔧 {impl}"
         df[col_name] = df['Implementation'].apply(lambda x: impl in str(x))
     
     # Tabs for different views
@@ -620,7 +568,7 @@ if st.session_state.analysis_done:
         </div>
         """, unsafe_allow_html=True)
         
-        # Data editor with proper column order
+        # Data editor
         edited_df = st.data_editor(
             df,
             column_config=column_config,
@@ -630,48 +578,31 @@ if st.session_state.analysis_done:
             num_rows="dynamic",
             key="data_editor",
             column_order=[
-                # Main columns first
                 "TOR_Sentence",
                 "Matched_Keyword",
                 "Requirement_Type",
-                # Selected Product group
-                "📦 Zocial Eye",
-                "📦 Warroom",
-                "📦 Outsource",
-                "📦 Other Product",
-                "📦 Non-Compliant",
-                # Implementation group
-                "🔧 Standard",
-                "🔧 Customize/Integration",
-                "🔧 Non-Compliant"
+                "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
+                "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant"
             ]
         )
         
-        # ===== VALIDATION LOGIC =====
-        # Rule 1: If Product Non-Compliant is checked → uncheck all products and implementations
+        # Validation logic
         for idx in edited_df.index:
             if edited_df.loc[idx, '📦 Non-Compliant']:
-                # Uncheck other products
                 edited_df.loc[idx, '📦 Zocial Eye'] = False
                 edited_df.loc[idx, '📦 Warroom'] = False
                 edited_df.loc[idx, '📦 Outsource'] = False
                 edited_df.loc[idx, '📦 Other Product'] = False
-                
-                # Force Implementation to Non-Compliant only
                 edited_df.loc[idx, '🔧 Standard'] = False
                 edited_df.loc[idx, '🔧 Customize/Integration'] = False
                 edited_df.loc[idx, '🔧 Non-Compliant'] = True
-        
-        # Rule 2: If Implementation Non-Compliant is checked → uncheck other implementations
-        for idx in edited_df.index:
+            
             if edited_df.loc[idx, '🔧 Non-Compliant']:
                 edited_df.loc[idx, '🔧 Standard'] = False
                 edited_df.loc[idx, '🔧 Customize/Integration'] = False
         
-        # Store edited data
         st.session_state.edited_df = edited_df
         
-        # Display validation rules
         st.info("""
         ℹ️ **Validation Rules:**
         - If **Product Non-Compliant** is selected → All other products unchecked + Implementation forced to Non-Compliant
@@ -679,7 +610,7 @@ if st.session_state.analysis_done:
         """)
     
     with tab2:
-        # Statistics (update to use new column names)
+        # Statistics
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -721,7 +652,6 @@ if st.session_state.analysis_done:
             fr_nfr_counts = edited_df['Requirement_Type'].value_counts()
             st.bar_chart(fr_nfr_counts)
         
-        # Implementation distribution
         st.markdown("**Implementation Distribution**")
         impl_counts = {
             'Standard': edited_df['🔧 Standard'].sum(),
@@ -762,13 +692,11 @@ if st.session_state.analysis_done:
             ]
         
         if filter_product:
-            # Map to column names
             prod_cols = [f'📦 {p}' for p in filter_product]
             mask = filtered_df[prod_cols].any(axis=1)
             filtered_df = filtered_df[mask]
         
         if filter_impl:
-            # Map to column names
             impl_cols = [f'🔧 {i}' for i in filter_impl]
             mask = filtered_df[impl_cols].any(axis=1)
             filtered_df = filtered_df[mask]
@@ -778,7 +706,6 @@ if st.session_state.analysis_done:
         
         st.write(f"**Showing {len(filtered_df)} of {len(edited_df)} rows**")
         
-        # Display filtered data with same column order
         display_cols = [
             "TOR_Sentence",
             "Matched_Keyword",
@@ -788,17 +715,17 @@ if st.session_state.analysis_done:
         ]
         st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=False)
 
-# ===== STEP 4: BUDGET CALCULATION (Always enabled) =====
+# ===== STEP 4: BUDGET CALCULATION =====
 if st.session_state.analysis_done:
     st.markdown('<p class="step-header">4️⃣ Budget Estimation</p>', unsafe_allow_html=True)
     
     if not st.session_state.budget_calculated:
-        if st.button("💰 Calculate Budget", type="primary"):
+        if st.button("💰 Calculate Budget", type="primary", use_container_width=True):
             with st.spinner("🤖 AI analyzing budget factors..."):
                 try:
                     budget_factors = extract_budget_factors(
                         st.session_state.tor_raw_text,
-                        GEMINI_API_KEY
+                        st.session_state.gemini_key
                     )
                     
                     st.session_state.budget_factors = budget_factors
@@ -809,23 +736,54 @@ if st.session_state.analysis_done:
                     st.error(f"❌ Budget calculation failed: {e}")
     
     if st.session_state.budget_calculated:
-        # Display factors
-        with st.expander("🔍 Detected Budget Factors", expanded=True):
+        # Display & Edit factors
+        with st.expander("🔍 Budget Factors (Click to Edit)", expanded=True):
             factors = st.session_state.budget_factors
             
             col1, col2 = st.columns(2)
             
             with col1:
-                st.subheader("Zocial Eye")
-                ze_users = st.number_input("Number of Users", value=factors.get('num_users', 2), min_value=1)
-                ze_backward = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), min_value=30)
+                st.subheader("📊 Zocial Eye")
+                ze_users = st.number_input(
+                    "Number of Users",
+                    value=factors.get('num_users', 2),
+                    min_value=1,
+                    key="ze_users"
+                )
+                ze_backward = st.number_input(
+                    "Data Backward (Days)",
+                    value=factors.get('data_backward_days', 90),
+                    min_value=30,
+                    step=30,
+                    key="ze_backward"
+                )
             
             with col2:
-                st.subheader("Warroom")
-                wr_users = st.number_input("Number of Users (WR)", value=factors.get('num_users', 5), min_value=1)
-                wr_tx = st.number_input("Monthly Transactions", value=factors.get('monthly_transactions', 35000), min_value=1000)
-                wr_channels = st.number_input("Social Channels", value=factors.get('social_channels_count', 0), min_value=0)
-                wr_chatbot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
+                st.subheader("💬 Warroom")
+                wr_users = st.number_input(
+                    "Number of Users",
+                    value=factors.get('num_users', 5),
+                    min_value=1,
+                    key="wr_users"
+                )
+                wr_tx = st.number_input(
+                    "Monthly Transactions",
+                    value=factors.get('monthly_transactions', 35000),
+                    min_value=1000,
+                    step=1000,
+                    key="wr_tx"
+                )
+                wr_channels = st.number_input(
+                    "Social Channels",
+                    value=factors.get('social_channels_count', 0),
+                    min_value=0,
+                    key="wr_channels"
+                )
+                wr_chatbot = st.checkbox(
+                    "Chatbot Required",
+                    value=factors.get('chatbot_required', False),
+                    key="wr_chatbot"
+                )
             
             # Update factors
             updated_factors = {
@@ -835,12 +793,14 @@ if st.session_state.analysis_done:
                 'social_channels_count': wr_channels,
                 'chatbot_required': wr_chatbot
             }
+            
+            if st.button("🔄 Recalculate with New Factors", use_container_width=True):
+                st.session_state.budget_factors = updated_factors
+                st.rerun()
         
-        # Calculate budget
-        if st.button("🔄 Recalculate Budget"):
-            st.session_state.budget_factors = updated_factors
+        # Calculate & Display Budget
+        st.subheader("💰 Budget Report")
         
-        # Display budget
         try:
             budget_results = calculate_budget_sheets(
                 st.session_state.budget_factors,
@@ -850,6 +810,8 @@ if st.session_state.analysis_done:
             )
             
             if budget_results:
+                total_budget = 0
+                
                 for result in budget_results:
                     budget_html = format_budget_report(
                         result['Product'],
@@ -857,12 +819,47 @@ if st.session_state.analysis_done:
                         st.session_state.budget_factors,
                         result['Breakdown']
                     )
+                    
                     st.markdown(budget_html, unsafe_allow_html=True)
-            else:
-                st.warning("⚠️ No suitable package found for the requirements")
+                    
+                    # Calculate total
+                    init_fee = result['Package'].get('Initial_Fee (THB)', 0)
+                    if init_fee and init_fee != '-' and isinstance(init_fee, (int, float)):
+                        total_budget += result['Breakdown']['total'] + init_fee
+                    else:
+                        total_budget += result['Breakdown']['total']
                 
+                # Summary
+                if len(budget_results) > 1:
+                    from utils.budget_engine import format_money
+                    
+                    st.markdown(f"""
+                    <div style='background-color: #d4edda; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745;'>
+                        <h3 style='color: #155724; margin-top: 0;'>📋 Budget Summary</h3>
+                    """, unsafe_allow_html=True)
+                    
+                    for result in budget_results:
+                        init_fee = result['Package'].get('Initial_Fee (THB)', 0)
+                        if init_fee and init_fee != '-' and isinstance(init_fee, (int, float)):
+                            prod_total = result['Breakdown']['total'] + init_fee
+                        else:
+                            prod_total = result['Breakdown']['total']
+                        
+                        st.markdown(f"<p style='font-size: 1.1em;'><strong>{result['Product']}:</strong> {format_money(prod_total)} THB</p>", unsafe_allow_html=True)
+                    
+                    st.markdown(f"""
+                        <hr style='border: 1px solid #c3e6cb;'>
+                        <h2 style='color: #155724; text-align: right;'>💰 GRAND TOTAL: {format_money(total_budget)} THB/Year</h2>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            else:
+                st.warning("⚠️ No suitable package found. Please adjust requirements or contact sales team.")
+        
         except Exception as e:
-            st.error(f"❌ Budget display failed: {e}")
+            st.error(f"❌ Budget calculation failed: {e}")
+            import traceback
+            st.code(traceback.format_exc())
 
 # ===== STEP 5: SAVE TO GOOGLE SHEET =====
 if st.session_state.edited_df is not None:
@@ -880,7 +877,6 @@ if st.session_state.edited_df is not None:
         st.info(f"📊 **Ready to save:** {len(save_data_filtered)} rows (Non-Compliant excluded)")
     
     with col2:
-        # Preview
         if st.button("👀 Preview Data"):
             with st.expander("Data to be saved", expanded=True):
                 st.dataframe(save_data_filtered, use_container_width=True)
@@ -941,13 +937,11 @@ if st.session_state.edited_df is not None:
                     st.error(f"❌ Save failed: {e}")
     
     with col2:
-        # Export to Excel
         if st.button("📥 Export to Excel", use_container_width=True):
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 save_data_filtered.to_excel(writer, sheet_name='Data', index=False)
                 
-                # Add instructions sheet
                 instructions = pd.DataFrame({
                     'Instructions': [
                         'This file contains verified TOR requirements',
@@ -974,7 +968,6 @@ if st.session_state.edited_df is not None:
     
     with col3:
         if st.button("🔄 Reset & Start Over", use_container_width=True):
-            # Clear all session state
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
