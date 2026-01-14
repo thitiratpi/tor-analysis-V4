@@ -213,22 +213,41 @@ if 'is_excel' not in st.session_state:
 with st.sidebar:
     st.title("🔧 Configuration")
     
-    # ===== 1. API KEYS =====
+    # ===== 1. API KEYS (SECURE) =====
     st.subheader("🔐 API Keys")
     
-    gemini_key_input = st.text_input(
-        "Gemini API Key",
-        type="password",
-        value=st.session_state.gemini_key or "",
-        help="Enter your Gemini API key (will be hidden)",
-        key="gemini_api_input"
-    )
-    
-    if gemini_key_input:
-        st.session_state.gemini_key = gemini_key_input
-        st.success("✅ API Key configured")
+    if st.session_state.gemini_key:
+        st.success("✅ Gemini API: Connected")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔄 Update", use_container_width=True, key="update_key"):
+                st.session_state.gemini_key = None
+                st.rerun()
+        with col2:
+            if st.button("🗑️ Clear", use_container_width=True, key="clear_key"):
+                st.session_state.gemini_key = None
+                st.rerun()
     else:
-        st.warning("⚠️ API Key required")
+        st.error("❌ Gemini API: Not configured")
+        
+        with st.expander("🔑 Configure API Key", expanded=True):
+            st.info("💡 Get your free API key from [Google AI Studio](https://makersuite.google.com/app/apikey)")
+            
+            api_key_input = st.text_input(
+                "Enter your API key",
+                type="password",
+                key="secure_api_input",
+                help="Your key is stored securely and never displayed"
+            )
+            
+            if st.button("✅ Save & Connect", type="primary", use_container_width=True):
+                if api_key_input and len(api_key_input) > 20:
+                    st.session_state.gemini_key = api_key_input
+                    st.success("🎉 Connected!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please enter a valid API key")
     
     st.divider()
     
