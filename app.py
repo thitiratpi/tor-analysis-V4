@@ -1,6 +1,6 @@
 """
 ================================================================================
-WISESIGHT STREAMLIT APP V2.1 - COMPLETE
+WISESIGHT STREAMLIT APP V2.2 - COMPLETE REVISED
 ================================================================================
 Full-featured TOR Analysis with Budget Engine
 - Advanced file reading (PDF/Word/Excel)
@@ -8,7 +8,7 @@ Full-featured TOR Analysis with Budget Engine
 - Product matching (multi-product)
 - FR/NFR classification (optional)
 - Budget estimation
-- Interactive verification
+- Interactive verification with user tracking
 - Google Sheet integration
 ================================================================================
 """
@@ -39,7 +39,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.1.0\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.2.0\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -201,10 +201,13 @@ if 'tor_raw_text' not in st.session_state:
     st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state:
     st.session_state.matched_products = []
-if 'gemini_key' not in st.session_state:
-    st.session_state.gemini_key = None
 if 'is_excel' not in st.session_state:
     st.session_state.is_excel = False
+# ✅ User edit tracking
+if 'original_selections' not in st.session_state:
+    st.session_state.original_selections = {}
+if 'user_modified_rows' not in st.session_state:
+    st.session_state.user_modified_rows = set()
 
 # ✅ Initialize API key from secrets
 if 'gemini_key' not in st.session_state:
@@ -212,6 +215,7 @@ if 'gemini_key' not in st.session_state:
         st.session_state.gemini_key = st.secrets["GEMINI_API_KEY"]
     except:
         st.session_state.gemini_key = None
+
 # ==========================================
 # SIDEBAR - CONFIGURATION
 # ==========================================
@@ -423,7 +427,7 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
         
         # Check API key
         if not st.session_state.gemini_key:
-            st.error("❌ Please enter Gemini API Key in sidebar")
+            st.error("❌ Please configure Gemini API Key in Streamlit secrets")
             st.stop()
         
         # Progress tracking
@@ -483,6 +487,14 @@ if st.session_state.file_uploaded and not st.session_state.analysis_done:
             st.session_state.matched_products = matched_products
             st.session_state.analysis_done = True
             
+            # ✅ Initialize original selections for tracking
+            st.session_state.original_selections = {}
+            for idx in result_df.index:
+                st.session_state.original_selections[idx] = {
+                    'products': str(result_df.loc[idx, 'Product_Match']),
+                    'implementation': str(result_df.loc[idx, 'Implementation'])
+                }
+            
             status_text.empty()
             progress_bar.empty()
             
@@ -506,7 +518,7 @@ if st.session_state.analysis_done:
     product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
     impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
     
-    # Create checkbox columns with grouped naming
+    # Create checkbox columns
     for prod in product_options:
         col_name = f"📦 {prod}"
         df[col_name] = df['Product_Match'].apply(lambda x: prod in str(x))
@@ -515,7 +527,12 @@ if st.session_state.analysis_done:
         col_name = f"🔧 {impl}"
         df[col_name] = df['Implementation'].apply(lambda x: impl in str(x))
     
-    # ✅ Create custom index starting from 1 with name "No."
+    # ✅ Add status column
+    df['📝 Status'] = df.index.map(
+        lambda x: '✅ Edited' if x in st.session_state.user_modified_rows else '🤖 Auto'
+    )
+    
+    # Create custom index
     df.index = range(1, len(df) + 1)
     df.index.name = 'No.'
     
@@ -525,36 +542,65 @@ if st.session_state.analysis_done:
     with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
         
-        # ✅ Add CSS for text wrapping
+        # ✅ Enhanced CSS with column coloring
         st.markdown("""
         <style>
-        /* Text wrapping for data editor cells */
-        .stDataFrame [data-testid="stDataFrameResizeHandle"] {
-            display: block !important;
-        }
-        
-        /* Enable word wrap */
+        /* Text wrapping */
         div[data-testid="stDataFrame"] div[data-testid="data-grid-canvas"] {
             word-wrap: break-word;
             white-space: normal;
         }
         
-        /* Specific wrapping for requirement column */
-        div[data-testid="stDataFrame"] [aria-colindex="2"] {
-            word-wrap: break-word;
-            white-space: normal;
-            overflow-wrap: break-word;
+        /* Status column styling */
+        div[data-testid="stDataFrame"] [aria-colindex="12"] {
+            background-color: #fafafa !important;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* Column header styling - Selected Product (Blue) */
+        div[data-testid="stDataFrame"] [aria-colindex="4"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="5"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="6"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="7"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="8"] div {
+            background-color: #e3f2fd !important;
+            font-weight: 600;
+            border-right: 2px solid #2196f3;
+        }
+        
+        /* Column header styling - Implementation (Orange) */
+        div[data-testid="stDataFrame"] [aria-colindex="9"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="10"] div,
+        div[data-testid="stDataFrame"] [aria-colindex="11"] div {
+            background-color: #fff3e0 !important;
+            font-weight: 600;
+            border-right: 2px solid #ff9800;
+        }
+        
+        /* Cell background - Selected Product columns (Light Blue) */
+        div[data-testid="stDataFrame"] [aria-colindex="4"],
+        div[data-testid="stDataFrame"] [aria-colindex="5"],
+        div[data-testid="stDataFrame"] [aria-colindex="6"],
+        div[data-testid="stDataFrame"] [aria-colindex="7"],
+        div[data-testid="stDataFrame"] [aria-colindex="8"] {
+            background-color: #f5f9ff !important;
+        }
+        
+        /* Cell background - Implementation columns (Light Orange) */
+        div[data-testid="stDataFrame"] [aria-colindex="9"],
+        div[data-testid="stDataFrame"] [aria-colindex="10"],
+        div[data-testid="stDataFrame"] [aria-colindex="11"] {
+            background-color: #fffbf5 !important;
         }
         </style>
         """, unsafe_allow_html=True)
         
         # Column configuration
         column_config = {
-            # Hide original columns
             "Product_Match": None,
             "Implementation": None,
             
-            # Main columns
             "TOR_Sentence": st.column_config.TextColumn(
                 "Requirement",
                 width="large",
@@ -567,59 +613,66 @@ if st.session_state.analysis_done:
                 help="FR (Functional) or NFR (Non-Functional)"
             ),
             
-            # ===== SELECTED PRODUCT GROUP =====
+            # ===== SELECTED PRODUCT GROUP (BLUE) =====
             "📦 Zocial Eye": st.column_config.CheckboxColumn(
-                "Zocial Eye",
+                "🔵 Zocial Eye",
                 help="Social media monitoring platform",
                 default=False,
                 width="small"
             ),
             "📦 Warroom": st.column_config.CheckboxColumn(
-                "Warroom",
+                "🔵 Warroom",
                 help="Customer engagement platform",
                 default=False,
                 width="small"
             ),
             "📦 Outsource": st.column_config.CheckboxColumn(
-                "Outsource",
+                "🔵 Outsource",
                 help="External development required",
                 default=False,
                 width="small"
             ),
             "📦 Other Product": st.column_config.CheckboxColumn(
-                "Other Product",
+                "🔵 Other Product",
                 help="Other WiseSight products",
                 default=False,
                 width="small"
             ),
             "📦 Non-Compliant": st.column_config.CheckboxColumn(
-                "Non-Compliant",
+                "🔵 Non-Compliant",
                 help="Does not match any product",
                 default=False,
                 width="small"
             ),
             
-            # ===== IMPLEMENTATION GROUP =====
+            # ===== IMPLEMENTATION GROUP (ORANGE) =====
             "🔧 Standard": st.column_config.CheckboxColumn(
-                "Standard",
-                help="Standard package implementation",
+                "🟠 Standard",
+                help="Standard package (single-select only)",
                 default=False,
                 width="small"
             ),
             "🔧 Customize/Integration": st.column_config.CheckboxColumn(
-                "Customize",
-                help="Custom development or integration required",
+                "🟠 Customize",
+                help="Custom development (single-select only)",
                 default=False,
                 width="small"
             ),
             "🔧 Non-Compliant": st.column_config.CheckboxColumn(
-                "Non-Compliant",
-                help="Cannot be implemented",
+                "🟠 Non-Compliant",
+                help="Cannot be implemented (single-select only)",
                 default=False,
                 width="small"
             ),
             
-            # ✅ Matched Spec - moved to end
+            # ✅ STATUS COLUMN
+            "📝 Status": st.column_config.TextColumn(
+                "📝 Status",
+                width="small",
+                help="🤖 Auto = System suggestion | ✅ Edited = User modified",
+                disabled=True
+            ),
+            
             "Matched_Keyword": st.column_config.TextColumn(
                 "Matched Spec",
                 width="medium",
@@ -627,46 +680,83 @@ if st.session_state.analysis_done:
             ),
         }
         
-        # Display grouped header info
+        # Display info box with color legend
         st.markdown("""
-        <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
-            <strong>Column Groups:</strong><br>
-            📦 = <strong>Selected Product</strong> (Zocial Eye, Warroom, Outsource, Other Product, Non-Compliant)<br>
-            🔧 = <strong>Implementation</strong> (Standard, Customize/Integration, Non-Compliant)
+        <div style='background-color: #f0f2f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;'>
+            <strong style='font-size: 1.1em;'>📌 Column Groups & Status Indicators:</strong><br><br>
+            <div style='display: flex; gap: 20px; flex-wrap: wrap;'>
+                <div style='flex: 1; min-width: 200px;'>
+                    <div style='background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%); 
+                                color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
+                        <strong>🔵 Selected Product</strong>
+                    </div>
+                    <small>✓ Can select multiple<br>✓ Choose all that apply</small>
+                </div>
+                <div style='flex: 1; min-width: 200px;'>
+                    <div style='background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); 
+                                color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
+                        <strong>🟠 Implementation</strong>
+                    </div>
+                    <small>⚠️ Select ONLY ONE<br>⚠️ Auto-enforced</small>
+                </div>
+                <div style='flex: 1; min-width: 200px;'>
+                    <div style='background: linear-gradient(135deg, #9e9e9e 0%, #bdbdbd 100%); 
+                                color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
+                        <strong>📝 Status</strong>
+                    </div>
+                    <small>🤖 Auto = System<br>✅ Edited = You changed</small>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # ✅ Data editor with new column order (Matched Spec at end)
+        # Data editor with Status column
         edited_df = st.data_editor(
             df,
             column_config=column_config,
-            disabled=["TOR_Sentence", "Matched_Keyword"],
-            hide_index=False,  # Show index with custom name "No."
+            disabled=["TOR_Sentence", "Matched_Keyword", "📝 Status"],
+            hide_index=False,
             use_container_width=True,
             num_rows="dynamic",
             key="data_editor",
             column_order=[
-                # Main column first
                 "TOR_Sentence",
-                # Requirement Type
                 "Requirement_Type",
-                # Selected Product group
-                "📦 Zocial Eye", 
-                "📦 Warroom", 
-                "📦 Outsource", 
-                "📦 Other Product", 
-                "📦 Non-Compliant",
-                # Implementation group
-                "🔧 Standard", 
-                "🔧 Customize/Integration", 
-                "🔧 Non-Compliant",
-                # ✅ Matched Spec moved to end
+                "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
+                "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
+                "📝 Status",
                 "Matched_Keyword"
             ]
         )
         
-        # Validation logic
+        # ✅ VALIDATION & TRACKING LOGIC
+        impl_cols = ['🔧 Standard', '🔧 Customize/Integration', '🔧 Non-Compliant']
+        
         for idx in edited_df.index:
+            # Track if user modified this row
+            original = st.session_state.original_selections.get(idx-1, {})  # idx-1 because we renumbered
+            
+            # Get current selections
+            current_products = '; '.join([
+                prod for prod in product_options 
+                if edited_df.loc[idx, f'📦 {prod}']
+            ])
+            current_impl = '; '.join([
+                impl for impl in impl_options 
+                if edited_df.loc[idx, f'🔧 {impl}']
+            ])
+            
+            # Check if changed from original
+            if (current_products != original.get('products', '') or 
+                current_impl != original.get('implementation', '')):
+                st.session_state.user_modified_rows.add(idx-1)
+                edited_df.loc[idx, '📝 Status'] = '✅ Edited'
+            else:
+                if idx-1 in st.session_state.user_modified_rows:
+                    st.session_state.user_modified_rows.remove(idx-1)
+                edited_df.loc[idx, '📝 Status'] = '🤖 Auto'
+            
+            # Rule 1: Product Non-Compliant logic
             if edited_df.loc[idx, '📦 Non-Compliant']:
                 edited_df.loc[idx, '📦 Zocial Eye'] = False
                 edited_df.loc[idx, '📦 Warroom'] = False
@@ -676,17 +766,44 @@ if st.session_state.analysis_done:
                 edited_df.loc[idx, '🔧 Customize/Integration'] = False
                 edited_df.loc[idx, '🔧 Non-Compliant'] = True
             
-            if edited_df.loc[idx, '🔧 Non-Compliant']:
-                edited_df.loc[idx, '🔧 Standard'] = False
-                edited_df.loc[idx, '🔧 Customize/Integration'] = False
+            # ✅ Rule 2: Implementation SINGLE-SELECT enforcement
+            selected_impls = [col for col in impl_cols if edited_df.loc[idx, col]]
+            
+            if len(selected_impls) > 1:
+                # Keep only the last selected (priority: Non-Compliant > Customize > Standard)
+                if edited_df.loc[idx, '🔧 Non-Compliant']:
+                    edited_df.loc[idx, '🔧 Standard'] = False
+                    edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                elif edited_df.loc[idx, '🔧 Customize/Integration']:
+                    edited_df.loc[idx, '🔧 Standard'] = False
+                    edited_df.loc[idx, '🔧 Non-Compliant'] = False
+                elif edited_df.loc[idx, '🔧 Standard']:
+                    edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                    edited_df.loc[idx, '🔧 Non-Compliant'] = False
         
         st.session_state.edited_df = edited_df
         
-        st.info("""
-        ℹ️ **Validation Rules:**
-        - If **Product Non-Compliant** is selected → All other products unchecked + Implementation forced to Non-Compliant
-        - If **Implementation Non-Compliant** is selected → Standard and Customize unchecked
-        """)
+        # Display validation info
+        st.markdown("""
+        <div style='background-color: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ffc107; margin-top: 15px;'>
+            <strong>⚠️ Validation Rules:</strong>
+            <ul style='margin: 8px 0 0 0; padding-left: 20px;'>
+                <li><strong>Implementation:</strong> ONLY ONE option per row (auto-enforced)</li>
+                <li><strong>Product Non-Compliant:</strong> Unchecks all other products + sets Implementation to Non-Compliant</li>
+                <li><strong>Status Tracking:</strong> 🤖 Auto = System suggestion | ✅ Edited = You modified this row</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Statistics for user edits
+        user_edit_count = len(st.session_state.user_modified_rows)
+        auto_count = len(edited_df) - user_edit_count
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("✅ User Edited", user_edit_count, delta=f"+{user_edit_count}")
+        with col2:
+            st.metric("🤖 Auto Suggestions", auto_count)
     
     with tab2:
         # Statistics
@@ -716,7 +833,7 @@ if st.session_state.analysis_done:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("**Product Distribution**")
+            st.markdown("**🔵 Product Distribution**")
             product_counts = {
                 'Zocial Eye': edited_df['📦 Zocial Eye'].sum(),
                 'Warroom': edited_df['📦 Warroom'].sum(),
@@ -727,17 +844,43 @@ if st.session_state.analysis_done:
             st.bar_chart(product_counts)
         
         with col2:
-            st.markdown("**Requirement Type Distribution**")
+            st.markdown("**📊 Requirement Type Distribution**")
             fr_nfr_counts = edited_df['Requirement_Type'].value_counts()
             st.bar_chart(fr_nfr_counts)
         
-        st.markdown("**Implementation Distribution**")
+        st.markdown("**🟠 Implementation Distribution**")
         impl_counts = {
             'Standard': edited_df['🔧 Standard'].sum(),
             'Customize/Integration': edited_df['🔧 Customize/Integration'].sum(),
             'Non-Compliant': edited_df['🔧 Non-Compliant'].sum()
         }
         st.bar_chart(impl_counts)
+        
+        # ✅ Validation check summary
+        st.subheader("✅ Validation Check")
+        
+        # Check for rows with no implementation selected
+        no_impl = []
+        for idx in edited_df.index:
+            if not any([edited_df.loc[idx, col] for col in impl_cols]):
+                no_impl.append(idx)
+        
+        if no_impl:
+            st.warning(f"⚠️ {len(no_impl)} rows have NO implementation selected")
+            st.write(f"Row numbers: {', '.join(map(str, no_impl))}")
+        else:
+            st.success("✅ All rows have implementation selected")
+        
+        # User modification summary
+        st.subheader("👤 User Modifications")
+        user_edit_count = len(st.session_state.user_modified_rows)
+        if user_edit_count > 0:
+            st.info(f"📝 You have modified {user_edit_count} row(s)")
+            if st.button("🔍 Show modified rows"):
+                modified_rows = [idx+1 for idx in st.session_state.user_modified_rows]
+                st.write(f"Modified row numbers: {', '.join(map(str, sorted(modified_rows)))}")
+        else:
+            st.info("📝 No user modifications yet (all system suggestions)")
     
     with tab3:
         st.subheader("🔍 Search & Filter")
@@ -762,6 +905,13 @@ if st.session_state.analysis_done:
             default=[]
         )
         
+        # ✅ Filter by Status
+        filter_status = st.multiselect(
+            "Filter by Status",
+            ["🤖 Auto", "✅ Edited"],
+            default=[]
+        )
+        
         # Apply filters
         filtered_df = edited_df.copy()
         
@@ -776,22 +926,25 @@ if st.session_state.analysis_done:
             filtered_df = filtered_df[mask]
         
         if filter_impl:
-            impl_cols = [f'🔧 {i}' for i in filter_impl]
-            mask = filtered_df[impl_cols].any(axis=1)
+            impl_cols_filter = [f'🔧 {i}' for i in filter_impl]
+            mask = filtered_df[impl_cols_filter].any(axis=1)
             filtered_df = filtered_df[mask]
         
         if filter_type:
             filtered_df = filtered_df[filtered_df['Requirement_Type'].isin(filter_type)]
         
+        if filter_status:
+            filtered_df = filtered_df[filtered_df['📝 Status'].isin(filter_status)]
+        
         st.write(f"**Showing {len(filtered_df)} of {len(edited_df)} rows**")
         
-        # ✅ Updated display column order
         display_cols = [
             "TOR_Sentence",
             "Requirement_Type",
             "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
             "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
-            "Matched_Keyword"  # ✅ Moved to end
+            "📝 Status",
+            "Matched_Keyword"
         ]
         st.dataframe(filtered_df[display_cols], use_container_width=True, hide_index=False)
 
@@ -1057,7 +1210,7 @@ st.divider()
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.caption("WiseSight TOR Analyzer v2.1")
+    st.caption("WiseSight TOR Analyzer v2.2")
 with col2:
     st.caption("Powered by Streamlit + Gemini AI")
 with col3:
