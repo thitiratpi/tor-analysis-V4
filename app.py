@@ -557,29 +557,36 @@ if st.session_state.analysis_done:
         st.markdown("""
         <style>
         /* ===== FORCE TEXT WRAPPING ===== */
-        /* Target ALL cells in data editor */
+        /* Target ALL cells: บังคับความสูง และจัด Text ชิดบน */
         div[data-testid="stDataFrame"] div[role="gridcell"] {
-            white-space: pre-wrap !important;
+            white-space: normal !important;        /* ให้ตัดบรรทัด */
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
-            word-break: break-word !important;
             line-height: 1.5 !important;
-            padding: 12px 8px !important;
-            min-height: 60px !important;
+            
+            /* จัด Layout ให้ข้อความอยู่ด้านบน (ไม่ลอยตรงกลาง) */
+            display: flex;
+            align-items: flex-start;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            
+            /* ⚠️ สำคัญ: ต้องกำหนดความสูงตายตัวเพื่อให้ Wrap text ได้ (st.data_editor ไม่รองรับ auto) */
+            height: 120px !important; 
+            min-height: 120px !important;
         }
         
-        /* Force row auto-height */
-        div[data-testid="stDataFrame"] div[role="row"] {
-            height: auto !important;
-            min-height: 60px !important;
+        /* ปรับ Header ให้สวยงามขึ้น */
+        div[data-testid="stDataFrame"] div[role="columnheader"] {
+            font-weight: bold;
+            background-color: #f0f2f6;
+            min-height: 50px !important;
+            align-items: center;
         }
-        
-        /* Text columns - extra wrapping */
+
+        /* Text columns - ขยายความกว้างพิเศษ */
         div[data-testid="stDataFrame"] div[aria-colindex="2"] div[role="gridcell"],
         div[data-testid="stDataFrame"] div[aria-colindex="13"] div[role="gridcell"] {
-            white-space: pre-wrap !important;
-            max-width: 500px !important;
-            overflow: visible !important;
+            max-width: 600px !important;
         }
         
         /* Status column styling */
