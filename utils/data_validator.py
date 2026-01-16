@@ -6,29 +6,45 @@ import pandas as pd
 import re
 
 def prepare_save_data(edited_df, product_options, impl_options):
-    """Prepare data for saving"""
-    save_data = []
+    """
+    Prepare data for saving to Google Sheet
+    Convert checkbox columns to final format
+    """
+    save_rows = []
     
-    for idx in edited_df.index:
-        # Get selected products
-        products = [
+    for idx, row in edited_df.iterrows():
+        # Get selected products (remove emoji prefix)
+        selected_products = [
             prod for prod in product_options 
-            if edited_df.loc[idx, f'📦 {prod}']
+            if row.get(f'📦 {prod}', False)
         ]
         
-        # ✅ Get implementation from selectbox (not checkboxes!)
-        implementation = edited_df.loc[idx, '🔧 Implementation']
+        # Get selected implementations (remove emoji prefix)
+        selected_impls = [
+            impl for impl in impl_options 
+            if row.get(f'🔧 {impl}', False)
+        ]
         
-        for product in products:
-            save_data.append({
-                'Product': product,
-                'TOR_Sentence': edited_df.loc[idx, 'TOR_Sentence'],
-                'Matched_Keyword': edited_df.loc[idx, 'Matched_Keyword'],
-                'Requirement_Type': edited_df.loc[idx, 'Requirement_Type'],
-                'Implementation': implementation
-            })
+        # Skip if no product selected
+        if not selected_products:
+            continue
+        
+        # Detect language
+        sentence = row['TOR_Sentence']
+        is_thai = bool(re.search(r'[ก-ฮ]', sentence))
+        
+        # Create rows for each product x implementation combination
+        for product in selected_products:
+            for implementation in selected_impls:
+                save_rows.append({
+                    'Product': product,
+                    'Sentence_TH': sentence if is_thai else '',
+                    'Sentence_ENG': sentence if not is_thai else '',
+                    'Implementation': implementation,
+                    'TOR_Sentence': sentence  # For duplicate checking
+                })
     
-    return pd.DataFrame(save_data)
+    return pd.DataFrame(save_rows)
 
 
 def check_duplicates(save_data, spec_df):
