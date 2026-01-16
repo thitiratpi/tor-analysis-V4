@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.3\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.4.4\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -43,6 +43,7 @@ st.markdown("""
         --border-color: #E2E8F0;
         --success-color: #10B981;
         --warning-color: #F59E0B;
+        --danger-color: #EF4444;
         --text-color: #334155;
     }
 
@@ -96,24 +97,43 @@ st.markdown("""
 
     /* ===== STATISTICS DASHBOARD ===== */
     .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
         color: #64748B;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
     }
     
-    .stat-value {
-        font-size: 2rem;
+    .stat-value-big {
+        font-size: 2.5rem;
         font-weight: 800;
         color: var(--primary-color);
     }
-    
-    .stat-list {
-        font-size: 0.95rem;
+
+    /* Professional List Row Style */
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+    .stat-name {
+        font-size: 1.1rem; /* Increased size */
         color: var(--text-color);
-        line-height: 2.0; /* Increased line height */
+        font-weight: 500;
+    }
+    .stat-count {
+        font-size: 1.3rem; /* Standardized size */
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+    .stat-count.danger {
+        color: var(--danger-color);
     }
 
     /* ===== BUTTONS ===== */
@@ -498,18 +518,18 @@ with tab_verify:
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
 
-        # --- DISPLAY STATS (FIXED DISPLAY) ---
+        # --- DISPLAY STATS (NEW PROFESSIONAL DESIGN) ---
         sc1, sc2, sc3 = st.columns([1, 1.5, 1.5])
         
         with sc1:
             st.markdown(f"""
             <div class="custom-card" style="text-align:center;">
                 <div class="stat-label">Total Requirements</div>
-                <div class="stat-value">{total_req}</div>
-                <hr style="margin: 10px 0; border:0; border-top:1px solid #eee;">
-                <div style="font-size:0.9rem; display:flex; justify-content:space-between;">
-                    <span style="color:#10B981;">✅ Edited: <b>{cnt_edited}</b></span>
-                    <span style="color:#64748B;">🤖 Auto: <b>{cnt_auto}</b></span>
+                <div class="stat-value-big">{total_req}</div>
+                <hr style="margin: 15px 0; border:0; border-top:1px solid #F1F5F9;">
+                <div style="font-size:0.95rem; display:flex; justify-content:space-between; padding:0 10px;">
+                    <span style="color:#10B981; font-weight:600;">✅ Edited: {cnt_edited}</span>
+                    <span style="color:#64748B; font-weight:600;">🤖 Auto: {cnt_auto}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -518,12 +538,21 @@ with tab_verify:
             st.markdown(f"""
             <div class="custom-card">
                 <div class="stat-label">Selected Products</div>
-                <div class="stat-list">
-                    🔹 Zocial Eye: <b>{cnt_ze}</b><br>
-                    🔹 Warroom: <b>{cnt_wr}</b><br>
-                    🔹 Outsource: <b>{cnt_out}</b><br>
-                    🔹 Other: <b>{cnt_oth}</b><br>
-                    <span style="color:#EF4444;">🔴 Non-Compliant: <b>{cnt_nc_prod}</b></span>
+                <div class="stat-row">
+                    <span class="stat-name">🔹 Zocial Eye</span> <span class="stat-count">{cnt_ze}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-name">🔹 Warroom</span> <span class="stat-count">{cnt_wr}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-name">🔹 Outsource</span> <span class="stat-count">{cnt_out}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-name">🔹 Other</span> <span class="stat-count">{cnt_oth}</span>
+                </div>
+                <div class="stat-row" style="border-bottom:none;">
+                    <span class="stat-name" style="color:#EF4444;">🔴 Non-Compliant</span> 
+                    <span class="stat-count danger">{cnt_nc_prod}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -532,12 +561,18 @@ with tab_verify:
             st.markdown(f"""
             <div class="custom-card">
                 <div class="stat-label">Implementation Type</div>
-                <div class="stat-list">
-                    🔸 Standard: <b>{cnt_std}</b><br>
-                    🔸 Customize: <b>{cnt_cust}</b><br>
-                    <span style="color:#EF4444;">🔴 Non-Compliant: <b>{cnt_nc_impl}</b></span>
+                <div class="stat-row">
+                    <span class="stat-name">🔸 Standard</span> <span class="stat-count">{cnt_std}</span>
                 </div>
-                <div style="height:2.6rem;"></div> </div>
+                <div class="stat-row">
+                    <span class="stat-name">🔸 Customize</span> <span class="stat-count">{cnt_cust}</span>
+                </div>
+                <div class="stat-row" style="border-bottom:none;">
+                    <span class="stat-name" style="color:#EF4444;">🔴 Non-Compliant</span> 
+                    <span class="stat-count danger">{cnt_nc_impl}</span>
+                </div>
+                <div style="height: 3.8rem;"></div>
+            </div>
             """, unsafe_allow_html=True)
 
         st.markdown("### 📋 3. Detailed Verification")
@@ -782,7 +817,6 @@ with tab_budget:
                 if other_expenses != 0:
                     st.markdown(f"""<div style='background-color: #FFF7ED; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #FED7AA;'><h4 style='color: #C2410C; margin:0;'>💸 Other Expenses</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'><strong>{other_expenses:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
 
-                # ✅ FIX: Reduced font size for Grand Total (2.5rem -> 1.8rem)
                 st.markdown(f"""<div style='background-color: #DCFCE7; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; text-align: right; margin-top:25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'><h4 style='color: #065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color: #047857; margin:0; font-size: 1.8rem;'>{grand_total:,.2f} THB/Year</h1></div>""", unsafe_allow_html=True)
             else:
                 st.warning("⚠️ No suitable package found.")
@@ -791,18 +825,15 @@ with tab_budget:
             st.markdown("#### ✏️ Adjust Budget Factors")
             
             with st.container():
-                # ✅ FIX: Removed <div class='custom-card'> wrapper
                 factors = st.session_state.budget_factors
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    # ✅ FIX: Increased header size
                     st.markdown("##### 🔹 Zocial Eye Configuration")
                     ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
                     ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
                 
                 with c2:
-                    # ✅ FIX: Increased header size
                     st.markdown("##### 🔸 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
                     wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
@@ -814,7 +845,6 @@ with tab_budget:
                 
                 st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
                 
-                # ✅ FIX: Increased header size
                 st.markdown("##### ➕ Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
@@ -833,4 +863,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.3 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.4.4 | Session: {datetime.now().strftime('%Y-%m-%d')}")
