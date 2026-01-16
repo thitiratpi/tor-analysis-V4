@@ -626,7 +626,7 @@ with tab_verify:
                 <div style="flex: 1; min-width: 250px;">
                     <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
                     <div style="font-size:0.85rem; color:#475569;">
-                        • ⚠️ Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                        • Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
                     </div>
                 </div>
                 <div style="flex: 1; min-width: 200px;">
