@@ -518,83 +518,78 @@ if st.session_state.analysis_done:
     product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
     impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
     
-    # ✅ Initialize original selections ONCE
+    # ✅ FIX 1: Initialize original selections ONCE with proper indexing
     if 'original_selections' not in st.session_state or len(st.session_state.original_selections) == 0:
         st.session_state.original_selections = {}
         for idx in df.index:
+            # Store original values using ORIGINAL index (0-based)
             st.session_state.original_selections[idx] = {
                 'products': str(df.loc[idx, 'Product_Match']),
                 'implementation': str(df.loc[idx, 'Implementation'])
             }
     
-    # Create checkbox columns for Products
+    # Create checkbox columns
     for prod in product_options:
         col_name = f"📦 {prod}"
         df[col_name] = df['Product_Match'].apply(lambda x: prod in str(x))
     
-    # ✅ FIX 2: Implementation as SELECTBOX (single-select enforced)
-    # Convert Implementation to single selectbox column
-    def get_implementation_value(impl_str):
-        """Extract single implementation value from string"""
-        for impl in impl_options:
-            if impl in str(impl_str):
-                return impl
-        return impl_options[0]  # Default to Standard
+    for impl in impl_options:
+        col_name = f"🔧 {impl}"
+        df[col_name] = df['Implementation'].apply(lambda x: impl in str(x))
     
-    df['🔧 Implementation'] = df['Implementation'].apply(get_implementation_value)
-    
-    # Status column
+    # ✅ Temporarily add Status column (will be updated after editing)
     df['📝 Status'] = '🤖 Auto'
     
-    # Store original index
+    # Store original index before renumbering
     df['_original_idx'] = df.index
     
-    # Renumber index
+    # Create custom index (1-based for display)
     df.index = range(1, len(df) + 1)
     df.index.name = 'No.'
     
-    # Tabs
+    # Tabs for different views
     tab1, tab2, tab3 = st.tabs(["📊 Data Editor", "📈 Statistics", "🔍 Filter & Search"])
     
     with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
         
-        # CSS
+        # ✅ FIX 2: STRONGER CSS for text wrapping
         st.markdown("""
         <style>
-        /* Force text wrapping */
+        /* ===== FORCE TEXT WRAPPING ===== */
+        /* Target ALL cells in data editor */
         div[data-testid="stDataFrame"] div[role="gridcell"] {
-            white-space: normal !important;
+            white-space: pre-wrap !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
+            word-break: break-word !important;
             line-height: 1.5 !important;
-            display: flex;
-            align-items: flex-start;
-            padding: 10px 8px !important;
-            height: 120px !important;
-            min-height: 120px !important;
+            padding: 12px 8px !important;
+            min-height: 60px !important;
         }
         
-        div[data-testid="stDataFrame"] div[role="columnheader"] {
-            font-weight: bold;
-            background-color: #f0f2f6;
-            min-height: 50px !important;
+        /* Force row auto-height */
+        div[data-testid="stDataFrame"] div[role="row"] {
+            height: auto !important;
+            min-height: 60px !important;
         }
         
-        /* Text columns */
+        /* Text columns - extra wrapping */
         div[data-testid="stDataFrame"] div[aria-colindex="2"] div[role="gridcell"],
-        div[data-testid="stDataFrame"] div[aria-colindex="12"] div[role="gridcell"] {
-            max-width: 600px !important;
+        div[data-testid="stDataFrame"] div[aria-colindex="13"] div[role="gridcell"] {
+            white-space: pre-wrap !important;
+            max-width: 500px !important;
+            overflow: visible !important;
         }
         
-        /* Status column */
-        div[data-testid="stDataFrame"] [aria-colindex="11"] {
+        /* Status column styling */
+        div[data-testid="stDataFrame"] [aria-colindex="12"] {
             background-color: #fafafa !important;
             font-weight: 600;
             text-align: center;
         }
         
-        /* Product columns (Blue) */
+        /* Column header styling - Selected Product (Blue) */
         div[data-testid="stDataFrame"] [aria-colindex="4"] div[role="columnheader"],
         div[data-testid="stDataFrame"] [aria-colindex="5"] div[role="columnheader"],
         div[data-testid="stDataFrame"] [aria-colindex="6"] div[role="columnheader"],
@@ -605,14 +600,16 @@ if st.session_state.analysis_done:
             border-right: 2px solid #2196f3;
         }
         
-        /* Implementation column (Orange) */
-        div[data-testid="stDataFrame"] [aria-colindex="9"] div[role="columnheader"] {
+        /* Column header styling - Implementation (Orange) */
+        div[data-testid="stDataFrame"] [aria-colindex="9"] div[role="columnheader"],
+        div[data-testid="stDataFrame"] [aria-colindex="10"] div[role="columnheader"],
+        div[data-testid="stDataFrame"] [aria-colindex="11"] div[role="columnheader"] {
             background-color: #fff3e0 !important;
             font-weight: 600;
             border-right: 2px solid #ff9800;
         }
         
-        /* Product cell backgrounds */
+        /* Cell background - Selected Product columns (Light Blue) */
         div[data-testid="stDataFrame"] [aria-colindex="4"],
         div[data-testid="stDataFrame"] [aria-colindex="5"],
         div[data-testid="stDataFrame"] [aria-colindex="6"],
@@ -621,8 +618,10 @@ if st.session_state.analysis_done:
             background-color: #f5f9ff !important;
         }
         
-        /* Implementation cell background */
-        div[data-testid="stDataFrame"] [aria-colindex="9"] {
+        /* Cell background - Implementation columns (Light Orange) */
+        div[data-testid="stDataFrame"] [aria-colindex="9"],
+        div[data-testid="stDataFrame"] [aria-colindex="10"],
+        div[data-testid="stDataFrame"] [aria-colindex="11"] {
             background-color: #fffbf5 !important;
         }
         </style>
@@ -646,92 +645,104 @@ if st.session_state.analysis_done:
                 help="FR (Functional) or NFR (Non-Functional)"
             ),
             
-            # Product columns (Checkboxes - multi-select)
+            # Selected Product Group (Blue)
             "📦 Zocial Eye": st.column_config.CheckboxColumn(
                 "🔵 Zocial Eye",
-                help="Social media monitoring",
+                help="Social media monitoring platform",
                 default=False,
                 width="small"
             ),
             "📦 Warroom": st.column_config.CheckboxColumn(
                 "🔵 Warroom",
-                help="Customer engagement",
+                help="Customer engagement platform",
                 default=False,
                 width="small"
             ),
             "📦 Outsource": st.column_config.CheckboxColumn(
                 "🔵 Outsource",
-                help="External development",
+                help="External development required",
                 default=False,
                 width="small"
             ),
             "📦 Other Product": st.column_config.CheckboxColumn(
-                "🔵 Other",
+                "🔵 Other Product",
                 help="Other WiseSight products",
                 default=False,
                 width="small"
             ),
             "📦 Non-Compliant": st.column_config.CheckboxColumn(
-                "🔵 N/A",
-                help="Does not match",
+                "🔵 Non-Compliant",
+                help="Does not match any product",
                 default=False,
                 width="small"
             ),
             
-            # ✅ Implementation as SELECTBOX (single-select enforced!)
-            "🔧 Implementation": st.column_config.SelectboxColumn(
-                "🟠 Implementation",
-                options=impl_options,
-                required=True,
-                width="medium",
-                help="Select ONE option only"
+            # Implementation Group (Orange)
+            "🔧 Standard": st.column_config.CheckboxColumn(
+                "🟠 Standard",
+                help="Standard package (single-select only)",
+                default=False,
+                width="small"
+            ),
+            "🔧 Customize/Integration": st.column_config.CheckboxColumn(
+                "🟠 Customize",
+                help="Custom development (single-select only)",
+                default=False,
+                width="small"
+            ),
+            "🔧 Non-Compliant": st.column_config.CheckboxColumn(
+                "🟠 Non-Compliant",
+                help="Cannot be implemented (single-select only)",
+                default=False,
+                width="small"
             ),
             
+            # Status Column
             "📝 Status": st.column_config.TextColumn(
                 "📝 Status",
                 width="small",
-                help="🤖 Auto | ✅ Edited",
+                help="🤖 Auto = System suggestion | ✅ Edited = User modified",
                 disabled=True
             ),
             
             "Matched_Keyword": st.column_config.TextColumn(
                 "Matched Spec",
                 width="medium",
-                help="Matched specification"
+                help="Matched specification from master data"
             ),
         }
         
-        # Info box
+        # Display info box
         st.markdown("""
         <div style='background-color: #f0f2f6; padding: 15px; border-radius: 8px; margin-bottom: 15px;'>
-            <strong style='font-size: 1.1em;'>📌 Column Groups:</strong><br><br>
+            <strong style='font-size: 1.1em;'>📌 Column Groups & Status Indicators:</strong><br><br>
             <div style='display: flex; gap: 20px; flex-wrap: wrap;'>
                 <div style='flex: 1; min-width: 200px;'>
                     <div style='background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%); 
                                 color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
                         <strong>🔵 Selected Product</strong>
                     </div>
-                    <small>✓ Can select multiple<br>✓ Use checkboxes</small>
+                    <small>✓ Can select multiple<br>✓ Choose all that apply</small>
                 </div>
                 <div style='flex: 1; min-width: 200px;'>
                     <div style='background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); 
                                 color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
                         <strong>🟠 Implementation</strong>
                     </div>
-                    <small>✓ Select ONE only<br>✓ Use dropdown</small>
+                    <small>⚠️ Select ONLY ONE<br>⚠️ Auto-enforced</small>
                 </div>
                 <div style='flex: 1; min-width: 200px;'>
                     <div style='background: linear-gradient(135deg, #9e9e9e 0%, #bdbdbd 100%); 
                                 color: white; padding: 8px 12px; border-radius: 5px; margin-bottom: 8px;'>
                         <strong>📝 Status</strong>
                     </div>
-                    <small>🤖 Auto = System<br>✅ Edited = Modified</small>
+                    <small>🤖 Auto = System<br>✅ Edited = You changed</small>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # ✅ Data editor with callback key for change detection
+        # Data editor
         edited_df = st.data_editor(
             df,
             column_config=column_config,
@@ -739,55 +750,68 @@ if st.session_state.analysis_done:
             hide_index=False,
             use_container_width=True,
             num_rows="dynamic",
-            key="data_editor_v2",  # Changed key to force refresh
+            key="data_editor",
             column_order=[
                 "TOR_Sentence",
                 "Requirement_Type",
                 "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
-                "🔧 Implementation",
+                "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
                 "📝 Status",
                 "Matched_Keyword"
             ],
-            height=600
+            height=600  # ✅ Set fixed height for better rendering
         )
         
-        # ✅ FIX 1: IMPROVED Status tracking with better comparison
+        # ✅ FIX 1: IMPROVED validation & status tracking
+        impl_cols = ['🔧 Standard', '🔧 Customize/Integration', '🔧 Non-Compliant']
+        
+        # Helper function to normalize selection string
         def normalize_selection(value):
-            """Normalize to sorted list"""
-            if pd.isna(value) or value == '' or str(value) == 'nan':
+            """Normalize selection to sorted list for comparison"""
+            if pd.isna(value) or value == '' or value == 'nan':
                 return []
             items = [x.strip() for x in str(value).split(';') if x.strip()]
             return sorted(items)
         
-        # Reset tracking
+        # Reset user_modified_rows for fresh check
         st.session_state.user_modified_rows = set()
+        status_changed = False
         
         for idx in edited_df.index:
+            # Get original index (0-based)
             original_idx = edited_df.loc[idx, '_original_idx']
+            
+            # Get original values
             original = st.session_state.original_selections.get(original_idx, {})
             
-            # Current selections
+            # Get current selections as sorted lists
             current_products_list = sorted([
                 prod for prod in product_options 
                 if edited_df.loc[idx, f'📦 {prod}']
             ])
-            current_impl = edited_df.loc[idx, '🔧 Implementation']
+            current_impl_list = sorted([
+                impl for impl in impl_options 
+                if edited_df.loc[idx, f'🔧 {impl}']
+            ])
             
-            # Original selections
+            # Get original selections as sorted lists
             original_products_list = normalize_selection(original.get('products', ''))
             original_impl_list = normalize_selection(original.get('implementation', ''))
-            original_impl = original_impl_list[0] if original_impl_list else impl_options[0]
             
-            # Compare
+            # ✅ Compare lists (order-independent)
             products_changed = (current_products_list != original_products_list)
-            impl_changed = (current_impl != original_impl)
+            impl_changed = (current_impl_list != original_impl_list)
             
             # Update status
             if products_changed or impl_changed:
                 st.session_state.user_modified_rows.add(original_idx)
-                edited_df.loc[idx, '📝 Status'] = '✅ Edited'
+                if edited_df.loc[idx, '📝 Status'] != '✅ Edited':
+                    edited_df.loc[idx, '📝 Status'] = '✅ Edited'
+                    status_changed = True
             else:
-                edited_df.loc[idx, '📝 Status'] = '🤖 Auto'
+                if edited_df.loc[idx, '📝 Status'] != '🤖 Auto':
+                    edited_df.loc[idx, '📝 Status'] = '🤖 Auto'
+                    status_changed = True
             
             # Product Non-Compliant logic
             if edited_df.loc[idx, '📦 Non-Compliant']:
@@ -795,23 +819,39 @@ if st.session_state.analysis_done:
                 edited_df.loc[idx, '📦 Warroom'] = False
                 edited_df.loc[idx, '📦 Outsource'] = False
                 edited_df.loc[idx, '📦 Other Product'] = False
-                edited_df.loc[idx, '🔧 Implementation'] = 'Non-Compliant'
+                edited_df.loc[idx, '🔧 Standard'] = False
+                edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                edited_df.loc[idx, '🔧 Non-Compliant'] = True
+            
+            # Implementation SINGLE-SELECT
+            selected_impls = [col for col in impl_cols if edited_df.loc[idx, col]]
+            
+            if len(selected_impls) > 1:
+                if edited_df.loc[idx, '🔧 Non-Compliant']:
+                    edited_df.loc[idx, '🔧 Standard'] = False
+                    edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                elif edited_df.loc[idx, '🔧 Customize/Integration']:
+                    edited_df.loc[idx, '🔧 Standard'] = False
+                    edited_df.loc[idx, '🔧 Non-Compliant'] = False
+                elif edited_df.loc[idx, '🔧 Standard']:
+                    edited_df.loc[idx, '🔧 Customize/Integration'] = False
+                    edited_df.loc[idx, '🔧 Non-Compliant'] = False
         
         st.session_state.edited_df = edited_df
         
-        # Validation info
+        # Display validation info
         st.markdown("""
         <div style='background-color: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ffc107; margin-top: 15px;'>
-            <strong>⚠️ Rules:</strong>
+            <strong>⚠️ Validation Rules:</strong>
             <ul style='margin: 8px 0 0 0; padding-left: 20px;'>
-                <li><strong>Implementation:</strong> Select ONE from dropdown (enforced)</li>
-                <li><strong>Product Non-Compliant:</strong> Unchecks all products + sets Implementation to Non-Compliant</li>
-                <li><strong>Status:</strong> Changes to ✅ Edited when you modify anything</li>
+                <li><strong>Implementation:</strong> ONLY ONE option per row (auto-enforced)</li>
+                <li><strong>Product Non-Compliant:</strong> Unchecks all other products + sets Implementation to Non-Compliant</li>
+                <li><strong>Status Tracking:</strong> Changes to ✅ Edited ONLY when you modify Product or Implementation</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
         
-        # Metrics
+        # Statistics for user edits
         user_edit_count = len(st.session_state.user_modified_rows)
         auto_count = len(edited_df) - user_edit_count
         
@@ -826,14 +866,15 @@ if st.session_state.analysis_done:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Total Requirements", len(edited_df))
+            total_rows = len(edited_df)
+            st.metric("Total Requirements", total_rows)
         
         with col2:
             non_compliant = edited_df['📦 Non-Compliant'].sum()
             st.metric("Non-Compliant", non_compliant, delta=f"-{non_compliant}", delta_color="inverse")
         
         with col3:
-            compliant = len(edited_df) - non_compliant
+            compliant = total_rows - non_compliant
             st.metric("Compliant", compliant, delta=f"+{compliant}")
         
         with col4:
@@ -859,28 +900,43 @@ if st.session_state.analysis_done:
             st.bar_chart(product_counts)
         
         with col2:
-            st.markdown("**📊 Requirement Type**")
+            st.markdown("**📊 Requirement Type Distribution**")
             fr_nfr_counts = edited_df['Requirement_Type'].value_counts()
             st.bar_chart(fr_nfr_counts)
         
         st.markdown("**🟠 Implementation Distribution**")
-        impl_counts = edited_df['🔧 Implementation'].value_counts()
+        impl_counts = {
+            'Standard': edited_df['🔧 Standard'].sum(),
+            'Customize/Integration': edited_df['🔧 Customize/Integration'].sum(),
+            'Non-Compliant': edited_df['🔧 Non-Compliant'].sum()
+        }
         st.bar_chart(impl_counts)
         
-        # Validation check
-        st.subheader("✅ Validation")
-        st.success("✅ All rows have valid implementation (enforced by dropdown)")
+        # ✅ Validation check summary
+        st.subheader("✅ Validation Check")
         
-        # User modifications
+        # Check for rows with no implementation selected
+        no_impl = []
+        for idx in edited_df.index:
+            if not any([edited_df.loc[idx, col] for col in impl_cols]):
+                no_impl.append(idx)
+        
+        if no_impl:
+            st.warning(f"⚠️ {len(no_impl)} rows have NO implementation selected")
+            st.write(f"Row numbers: {', '.join(map(str, no_impl))}")
+        else:
+            st.success("✅ All rows have implementation selected")
+        
+        # User modification summary
         st.subheader("👤 User Modifications")
         user_edit_count = len(st.session_state.user_modified_rows)
         if user_edit_count > 0:
-            st.info(f"📝 Modified {user_edit_count} row(s)")
+            st.info(f"📝 You have modified {user_edit_count} row(s)")
             if st.button("🔍 Show modified rows"):
-                modified_rows = [idx+1 for idx in sorted(st.session_state.user_modified_rows)]
-                st.write(f"Rows: {', '.join(map(str, modified_rows))}")
+                modified_rows = [idx+1 for idx in st.session_state.user_modified_rows]
+                st.write(f"Modified row numbers: {', '.join(map(str, sorted(modified_rows)))}")
         else:
-            st.info("📝 No modifications yet")
+            st.info("📝 No user modifications yet (all system suggestions)")
     
     with tab3:
         st.subheader("🔍 Search & Filter")
@@ -895,7 +951,7 @@ if st.session_state.analysis_done:
         
         filter_impl = st.multiselect(
             "Filter by Implementation",
-            impl_options,
+            ['Standard', 'Customize/Integration', 'Non-Compliant'],
             default=[]
         )
         
@@ -905,6 +961,7 @@ if st.session_state.analysis_done:
             default=[]
         )
         
+        # ✅ Filter by Status
         filter_status = st.multiselect(
             "Filter by Status",
             ["🤖 Auto", "✅ Edited"],
@@ -925,7 +982,9 @@ if st.session_state.analysis_done:
             filtered_df = filtered_df[mask]
         
         if filter_impl:
-            filtered_df = filtered_df[filtered_df['🔧 Implementation'].isin(filter_impl)]
+            impl_cols_filter = [f'🔧 {i}' for i in filter_impl]
+            mask = filtered_df[impl_cols_filter].any(axis=1)
+            filtered_df = filtered_df[mask]
         
         if filter_type:
             filtered_df = filtered_df[filtered_df['Requirement_Type'].isin(filter_type)]
@@ -939,7 +998,7 @@ if st.session_state.analysis_done:
             "TOR_Sentence",
             "Requirement_Type",
             "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
-            "🔧 Implementation",
+            "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
             "📝 Status",
             "Matched_Keyword"
         ]
