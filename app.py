@@ -375,7 +375,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 tab_verify, tab_budget = st.tabs(["📊 Results & Verification", "💰 Budget Estimation"])
 
 # ==========================================
-# TAB 1: RESULTS & VERIFY
+# TAB 1: 
 # ==========================================
 with tab_verify:
 
@@ -790,7 +790,7 @@ with tab_budget:
     st.markdown("### 💰 Budget Estimation")
     
     if not st.session_state.analysis_done:
-        st.warning("⚠️ Please complete the 'Results & Verify' step first.")
+        st.warning("⚠️ Please complete the 'Results & Verification' step first.")
     else:
         if not st.session_state.budget_calculated:
             if st.button("Generate Initial Budget", type="primary"):
