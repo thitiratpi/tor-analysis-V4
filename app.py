@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
-import re  # ✅ Import re สำหรับแยกภาษา (นำกลับมาให้แล้ว)
+import re
 from datetime import datetime
 from io import BytesIO
 
@@ -25,7 +25,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.5\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.6\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -536,21 +536,20 @@ with tab_verify:
         # 2. Filter Non-Compliant
         valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
-        # 3. ✅ MAP COLUMNS FOR GOOGLE SHEET (TH/ENG SPLIT) - (Logic from v2.3.4 maintained)
+        # 3. ✅ FIX: MAP COLUMNS FOR GOOGLE SHEET (USE UNDERSCORES)
         def split_languages(row):
             text = str(row['TOR_Sentence'])
-            # Check for Thai characters
             if re.search(r'[\u0E00-\u0E7F]', text):
                 return pd.Series([text, ""]) # TH=text, ENG=""
             else:
                 return pd.Series(["", text]) # TH="", ENG=text
         
         if not valid_data.empty:
-            valid_data[['Sentence (TH)', 'Sentence (ENG)']] = valid_data.apply(split_languages, axis=1)
-            # Reorder to match Sheet: Product, Sentence (TH), Sentence (ENG), Implementation
-            final_save_data = valid_data[['Product', 'Sentence (TH)', 'Sentence (ENG)', 'Implementation']]
+            # Change column names to use UNDERSCORE instead of parentheses
+            valid_data[['Sentence_TH', 'Sentence_ENG']] = valid_data.apply(split_languages, axis=1)
+            final_save_data = valid_data[['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation']]
         else:
-            final_save_data = pd.DataFrame(columns=['Product', 'Sentence (TH)', 'Sentence (ENG)', 'Implementation'])
+            final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
 
         col_save, col_export, col_reset = st.columns(3)
         with col_save:
@@ -570,7 +569,6 @@ with tab_verify:
         with col_export:
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                # For Excel export, we can also use the split version for consistency
                 final_save_data.to_excel(writer, sheet_name='Data', index=False)
             st.download_button("⬇️ Download Excel", data=output.getvalue(), file_name="export.xlsx", mime="application/vnd.ms-excel")
 
@@ -612,7 +610,7 @@ with tab_budget:
                 for res in results:
                     # Formatting HTML for Accordion style
                     with st.expander(f"📦 {res['Product']}", expanded=True):
-                         # ✅ FIX 1: Clean raw HTML to prevent indentation issues in Markdown
+                         # ✅ FIX: Clean raw HTML
                          raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
                          clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
                          
@@ -628,7 +626,7 @@ with tab_budget:
                 mandays = st.session_state.budget_factors.get('mandays', 0)
                 manday_cost = mandays * 22000
                 
-                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES (NEW) ---
+                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES ---
                 other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
                 
                 # GRAND TOTAL
@@ -720,4 +718,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.5 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.6 | Session: {datetime.now().strftime('%Y-%m-%d')}")
