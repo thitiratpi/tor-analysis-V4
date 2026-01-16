@@ -367,7 +367,7 @@ tab_verify, tab_budget = st.tabs(["📊 Results & Verification", "💰 Budget Es
 with tab_verify:
 
     # ===== STEP 1: FILE UPLOAD =====
-    st.markdown("### 📂 1. Upload TOR Document")
+    st.markdown("### 📂 Upload TOR Document")
     
     col1, col2 = st.columns([3, 1])
 
@@ -485,7 +485,7 @@ with tab_verify:
 
     # ===== STEP 3: RESULTS & STATISTICS =====
     if st.session_state.analysis_done:
-        st.markdown("### 📊 2. Analysis Results")
+        st.markdown("### 📊 Analysis Results")
         
         # Use edited_df if available, else processed_df for stats
         df_stats = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
@@ -575,7 +575,7 @@ with tab_verify:
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("### 📋 3. Detailed Verification")
+        st.markdown("### 📋 Detailed Verification")
 
         # --- DATA EDITOR ---
         df = st.session_state.processed_df.copy()
@@ -716,7 +716,7 @@ with tab_verify:
         st.session_state.edited_df = edited_df
 
         # --- FOOTER ACTIONS ---
-        st.markdown("### 💾 4. Export & Save")
+        st.markdown("### 💾 Export & Save")
         
         # Prepare Data
         raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
