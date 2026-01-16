@@ -1158,7 +1158,7 @@ with tab_budget:
                 with c2:
                     st.markdown("##### 🟡 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
-                    wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
+                    wr_tx = st.number_input("Monthly Transaction", value=factors.get('monthly_transactions', 35000), step=1000)
                     
                 c3, c4 = st.columns(2)
                 with c3:
