@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import re
-import time  # ✅ Added for delay effect
+import time
 from datetime import datetime
 from io import BytesIO
 
@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.7\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.8\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -182,8 +182,8 @@ with st.sidebar:
                             undo_last_update(record['data'], sheet_url)
                             st.session_state.save_history.pop(-1-idx)
                             st.success("✅ Undo successful!")
-                            time.sleep(1) # Wait for user to see success
-                            st.rerun()    # Refresh sidebar
+                            time.sleep(1)
+                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Undo failed: {e}")
     else:
@@ -534,7 +534,7 @@ with tab_verify:
         # --- FOOTER BUTTONS (SAVE/EXPORT) ---
         st.markdown("### 💾 Export Results")
         
-        # 1. Prepare Base Data
+        # 1. Prepare Base Data (Filtered non-compliant for Google Sheet)
         raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
         
         # 2. Filter Non-Compliant
@@ -575,10 +575,25 @@ with tab_verify:
                     except Exception as e: st.error(f"❌ Failed: {e}")
 
         with col_export:
+            # ✅ EXPORT LOGIC FOR EXCEL: Use edited_df directly (No split, Same as table)
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                final_save_data.to_excel(writer, sheet_name='Data', index=False)
-            st.download_button("⬇️ Download Excel", data=output.getvalue(), file_name="export.xlsx", mime="application/vnd.ms-excel")
+                # Use edited_df but remove internal helper columns
+                excel_data = edited_df.copy()
+                if '_original_idx' in excel_data.columns:
+                    excel_data = excel_data.drop(columns=['_original_idx'])
+                
+                excel_data.to_excel(writer, sheet_name='Data', index=False)
+            
+            # ✅ FILENAME LOGIC
+            original_name = st.session_state.file_name
+            if original_name:
+                base_name = original_name.rsplit('.', 1)[0]
+                download_name = f"{base_name}_compliant.xlsx"
+            else:
+                download_name = "compliant_export.xlsx"
+
+            st.download_button("⬇️ Download Excel", data=output.getvalue(), file_name=download_name, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         with col_reset:
              if st.button("🔄 Reset"):
@@ -726,4 +741,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.7 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.8 | Session: {datetime.now().strftime('%Y-%m-%d')}")
