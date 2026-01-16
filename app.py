@@ -845,12 +845,12 @@ with tab_budget:
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    st.markdown("##### 🔹 Zocial Eye Configuration")
+                    st.markdown("##### Zocial Eye Configuration")
                     ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
                     ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
                 
                 with c2:
-                    st.markdown("##### 🔸 Warroom Configuration")
+                    st.markdown("##### Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
                     wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
                     
@@ -861,7 +861,7 @@ with tab_budget:
                 
                 st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
                 
-                st.markdown("##### ➕ Additional Costs")
+                st.markdown("##### Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
                     md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1)
