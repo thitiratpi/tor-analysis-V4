@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.8\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.9\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -540,7 +540,7 @@ with tab_verify:
         # 2. Filter Non-Compliant
         valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
-        # 3. ✅ MAP COLUMNS FOR GOOGLE SHEET (TH/ENG SPLIT)
+        # 3. MAP COLUMNS FOR GOOGLE SHEET (TH/ENG SPLIT)
         def split_languages(row):
             text = str(row['TOR_Sentence'])
             if re.search(r'[\u0E00-\u0E7F]', text):
@@ -567,25 +567,34 @@ with tab_verify:
                             'data': final_save_data.to_dict('records')
                         })
                         st.success("✅ Saved!"); st.balloons()
-                        
-                        # ✅ FIX: FORCE RERUN TO UPDATE SIDEBAR HISTORY
                         time.sleep(1.5)
                         st.rerun()
-                        
                     except Exception as e: st.error(f"❌ Failed: {e}")
 
         with col_export:
-            # ✅ EXPORT LOGIC FOR EXCEL: Use edited_df directly (No split, Same as table)
+            # ✅ EXPORT LOGIC FOR EXCEL (MODIFIED)
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                # Use edited_df but remove internal helper columns
-                excel_data = edited_df.copy()
-                if '_original_idx' in excel_data.columns:
-                    excel_data = excel_data.drop(columns=['_original_idx'])
+                # 1. Use the main processed_df which contains the updated string values
+                export_df = st.session_state.processed_df.copy()
                 
-                excel_data.to_excel(writer, sheet_name='Data', index=False)
+                # 2. Select only 4 required columns
+                cols_to_keep = ['TOR_Sentence', 'Product_Match', 'Implementation', 'Requirement_Type']
+                # Ensure columns exist before selecting
+                available_cols = [c for c in cols_to_keep if c in export_df.columns]
+                export_df = export_df[available_cols]
+                
+                # 3. Rename columns to match requirements
+                export_df = export_df.rename(columns={
+                    'TOR_Sentence': 'Requirement',
+                    'Product_Match': 'Selected product',
+                    'Requirement_Type': 'Requirement type'
+                })
+                
+                # Write to Excel
+                export_df.to_excel(writer, sheet_name='Data', index=False)
             
-            # ✅ FILENAME LOGIC
+            # ✅ FILENAME LOGIC (COMPLIANT)
             original_name = st.session_state.file_name
             if original_name:
                 base_name = original_name.rsplit('.', 1)[0]
@@ -633,7 +642,7 @@ with tab_budget:
                 for res in results:
                     # Formatting HTML for Accordion style
                     with st.expander(f"📦 {res['Product']}", expanded=True):
-                         # ✅ FIX: Clean raw HTML
+                         # Clean raw HTML
                          raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
                          clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
                          
@@ -645,11 +654,11 @@ with tab_budget:
                     else:
                          total_budget += res['Breakdown']['total']
                 
-                # --- ✅ MODIFIED: CALCULATE MANDAYS COST ---
+                # --- CALCULATE MANDAYS COST ---
                 mandays = st.session_state.budget_factors.get('mandays', 0)
                 manday_cost = mandays * 22000
                 
-                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES ---
+                # --- CALCULATE OTHER EXPENSES ---
                 other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
                 
                 # GRAND TOTAL
@@ -707,7 +716,7 @@ with tab_budget:
                 wr_ch = col_wr3.number_input("Social Channels", value=factors.get('social_channels_count', 0))
                 wr_bot = col_wr4.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
                 
-                # --- ✅ MODIFIED: ADD CUSTOMIZATION & OTHER EXPENSES INPUT ---
+                # --- ADD CUSTOMIZATION & OTHER EXPENSES INPUT ---
                 st.caption("Additional Services & Costs")
                 col_add1, col_add2 = st.columns(2)
                 
@@ -741,4 +750,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.8 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.9 | Session: {datetime.now().strftime('%Y-%m-%d')}")
