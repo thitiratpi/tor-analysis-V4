@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.0\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.4.1\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -113,14 +113,7 @@ st.markdown("""
     .stat-list {
         font-size: 0.95rem;
         color: var(--text-color);
-        line-height: 1.8;
-    }
-    
-    .stat-list li {
-        list-style: none;
-        border-bottom: 1px dashed #E2E8F0;
-        padding-bottom: 4px;
-        margin-bottom: 4px;
+        line-height: 2.0; /* Increased line height */
     }
 
     /* ===== BUTTONS ===== */
@@ -505,7 +498,7 @@ with tab_verify:
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
 
-        # --- DISPLAY STATS (NEW DESIGN) ---
+        # --- DISPLAY STATS (FIXED DISPLAY) ---
         sc1, sc2, sc3 = st.columns([1, 1.5, 1.5])
         
         with sc1:
@@ -522,31 +515,29 @@ with tab_verify:
             """, unsafe_allow_html=True)
             
         with sc2:
-            st.markdown("""
+            st.markdown(f"""
             <div class="custom-card">
                 <div class="stat-label">Selected Products</div>
-                <ul class="stat-list">
-            """ + f"""
-                    <li>🔹 Zocial Eye <span style="float:right; font-weight:bold;">{cnt_ze}</span></li>
-                    <li>🔹 Warroom <span style="float:right; font-weight:bold;">{cnt_wr}</span></li>
-                    <li>🔹 Outsource <span style="float:right; font-weight:bold;">{cnt_out}</span></li>
-                    <li>🔹 Other <span style="float:right; font-weight:bold;">{cnt_oth}</span></li>
-                    <li style="color:#EF4444; border:none;">🔴 Non-Compliant <span style="float:right; font-weight:bold;">{cnt_nc_prod}</span></li>
-                </ul>
+                <div class="stat-list">
+                    🔹 Zocial Eye: <b>{cnt_ze}</b><br>
+                    🔹 Warroom: <b>{cnt_wr}</b><br>
+                    🔹 Outsource: <b>{cnt_out}</b><br>
+                    🔹 Other: <b>{cnt_oth}</b><br>
+                    <span style="color:#EF4444;">🔴 Non-Compliant: <b>{cnt_nc_prod}</b></span>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
         with sc3:
-            st.markdown("""
+            st.markdown(f"""
             <div class="custom-card">
                 <div class="stat-label">Implementation Type</div>
-                <ul class="stat-list">
-            """ + f"""
-                    <li>🔸 Standard <span style="float:right; font-weight:bold;">{cnt_std}</span></li>
-                    <li>🔸 Customize <span style="float:right; font-weight:bold;">{cnt_cust}</span></li>
-                    <li style="color:#EF4444; border:none;">🔴 Non-Compliant <span style="float:right; font-weight:bold;">{cnt_nc_impl}</span></li>
-                </ul>
-                <div style="height:1.7rem;"></div> </div>
+                <div class="stat-list">
+                    🔸 Standard: <b>{cnt_std}</b><br>
+                    🔸 Customize: <b>{cnt_cust}</b><br>
+                    <span style="color:#EF4444;">🔴 Non-Compliant: <b>{cnt_nc_impl}</b></span>
+                </div>
+                <div style="height:2.6rem;"></div> </div>
             """, unsafe_allow_html=True)
 
         st.markdown("### 📋 3. Detailed Verification")
@@ -838,4 +829,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.0 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.4.1 | Session: {datetime.now().strftime('%Y-%m-%d')}")
