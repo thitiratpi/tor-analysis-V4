@@ -24,7 +24,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.2\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.3\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -604,7 +604,12 @@ with tab_budget:
                 # --- ✅ MODIFIED: CALCULATE MANDAYS COST ---
                 mandays = st.session_state.budget_factors.get('mandays', 0)
                 manday_cost = mandays * 22000
-                grand_total = total_budget + manday_cost
+                
+                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES ---
+                other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
+                
+                # GRAND TOTAL
+                grand_total = total_budget + manday_cost + other_expenses
                 
                 # Show Manday Cost (If added)
                 if mandays != 0:
@@ -616,7 +621,19 @@ with tab_budget:
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
+                
+                # Show Other Expenses (If added)
+                if other_expenses != 0:
+                    st.markdown(f"""
+                    <div style='background-color: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffe0b2;'>
+                        <h4 style='color: #e65100; margin:0;'>💸 Other Expenses</h4>
+                        <p style='margin: 5px 0 0 0; font-size: 1.1em;'>
+                            <strong>{other_expenses:,.0f} THB</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
+                # Show Grand Total
                 st.markdown(f"""
                 <div style='background-color: #d4edda; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745; text-align: right; margin-top:20px;'>
                     <h2 style='color: #155724; margin:0;'>💰 GRAND TOTAL: {grand_total:,.2f} THB/Year</h2>
@@ -646,14 +663,25 @@ with tab_budget:
                 wr_ch = col_wr3.number_input("Social Channels", value=factors.get('social_channels_count', 0))
                 wr_bot = col_wr4.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
                 
-                # --- ✅ MODIFIED: ADD CUSTOMIZATION INPUT ---
-                st.caption("Customization Service")
-                md_input = st.number_input(
-                    "Customization Mandays (1 Manday = 22,000 THB)", 
-                    value=factors.get('mandays', 0), 
-                    step=1,
-                    help="Add or subtract mandays for custom requirements"
-                )
+                # --- ✅ MODIFIED: ADD CUSTOMIZATION & OTHER EXPENSES INPUT ---
+                st.caption("Additional Services & Costs")
+                col_add1, col_add2 = st.columns(2)
+                
+                with col_add1:
+                    md_input = st.number_input(
+                        "Customization Mandays (1 Manday = 22,000 THB)", 
+                        value=factors.get('mandays', 0), 
+                        step=1,
+                        help="Add or subtract mandays for custom requirements"
+                    )
+                
+                with col_add2:
+                    other_cost_input = st.number_input(
+                        "Other Expenses (THB)",
+                        value=float(factors.get('other_expenses', 0.0)),
+                        step=1000.0,
+                        help="Add any additional costs (e.g. implementation fee, travel, etc.)"
+                    )
                 
                 if st.button("🔄 Recalculate Budget"):
                     st.session_state.budget_factors.update({
@@ -662,10 +690,11 @@ with tab_budget:
                         'monthly_transactions': wr_tx, 
                         'social_channels_count': wr_ch,
                         'chatbot_required': wr_bot,
-                        'mandays': md_input  # Save mandays to session state
+                        'mandays': md_input,          # Save mandays
+                        'other_expenses': other_cost_input # Save other expenses
                     })
                     st.rerun()
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.2 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.3 | Session: {datetime.now().strftime('%Y-%m-%d')}")
