@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import re  # ✅ Import re สำหรับแยกภาษา (นำกลับมาให้แล้ว)
 from datetime import datetime
 from io import BytesIO
 
@@ -24,7 +25,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.3\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.5\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -528,19 +529,40 @@ with tab_verify:
 
         # --- FOOTER BUTTONS (SAVE/EXPORT) ---
         st.markdown("### 💾 Export Results")
-        save_data = prepare_save_data(edited_df, product_options, impl_options)
-        save_data = save_data[~save_data['Product'].str.contains('Non-Compliant', na=False)]
+        
+        # 1. Prepare Base Data
+        raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
+        
+        # 2. Filter Non-Compliant
+        valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
+        
+        # 3. ✅ MAP COLUMNS FOR GOOGLE SHEET (TH/ENG SPLIT) - (Logic from v2.3.4 maintained)
+        def split_languages(row):
+            text = str(row['TOR_Sentence'])
+            # Check for Thai characters
+            if re.search(r'[\u0E00-\u0E7F]', text):
+                return pd.Series([text, ""]) # TH=text, ENG=""
+            else:
+                return pd.Series(["", text]) # TH="", ENG=text
+        
+        if not valid_data.empty:
+            valid_data[['Sentence (TH)', 'Sentence (ENG)']] = valid_data.apply(split_languages, axis=1)
+            # Reorder to match Sheet: Product, Sentence (TH), Sentence (ENG), Implementation
+            final_save_data = valid_data[['Product', 'Sentence (TH)', 'Sentence (ENG)', 'Implementation']]
+        else:
+            final_save_data = pd.DataFrame(columns=['Product', 'Sentence (TH)', 'Sentence (ENG)', 'Implementation'])
 
         col_save, col_export, col_reset = st.columns(3)
         with col_save:
-            if st.button("💾 Save to Sheet", type="primary", disabled=len(save_data)==0):
+            if st.button("💾 Save to Sheet", type="primary", disabled=len(final_save_data)==0):
                 with st.spinner("Saving..."):
                     try:
-                        save_to_product_spec(save_data, sheet_url)
+                        save_to_product_spec(final_save_data, sheet_url)
                         st.session_state.save_history.append({
                             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                            'count': len(save_data), 'products': list(save_data['Product'].unique()),
-                            'data': save_data.to_dict('records')
+                            'count': len(final_save_data), 
+                            'products': list(final_save_data['Product'].unique()),
+                            'data': final_save_data.to_dict('records')
                         })
                         st.success("✅ Saved!"); st.balloons()
                     except Exception as e: st.error(f"❌ Failed: {e}")
@@ -548,7 +570,8 @@ with tab_verify:
         with col_export:
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                save_data.to_excel(writer, sheet_name='Data', index=False)
+                # For Excel export, we can also use the split version for consistency
+                final_save_data.to_excel(writer, sheet_name='Data', index=False)
             st.download_button("⬇️ Download Excel", data=output.getvalue(), file_name="export.xlsx", mime="application/vnd.ms-excel")
 
         with col_reset:
@@ -605,7 +628,7 @@ with tab_budget:
                 mandays = st.session_state.budget_factors.get('mandays', 0)
                 manday_cost = mandays * 22000
                 
-                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES ---
+                # --- ✅ MODIFIED: CALCULATE OTHER EXPENSES (NEW) ---
                 other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
                 
                 # GRAND TOTAL
@@ -697,4 +720,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.3 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.5 | Session: {datetime.now().strftime('%Y-%m-%d')}")
