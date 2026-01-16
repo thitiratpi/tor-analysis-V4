@@ -194,15 +194,15 @@ def format_budget_report(product, package_row, factors, breakdown):
             return "-"
     
     # HTML Construction
-    # Note: Indentation here is for Python readability, but we will strip it before returning.
+    # ✅ FIX: Reduced font sizes (h2 -> h3, h2 -> h4) for better look
     html = f"""
-    <div style="border: 2px solid #1f77b4; border-radius: 10px; padding: 20px; margin: 20px 0; background-color: #f8f9fa;">
-        <h2 style="color: #1f77b4; margin-top: 0;">📦 {product}</h2>
-        <h4 style="color: #666;">Package: {package_row.get('Package', 'Custom')}</h4>
-        <hr style="border: 1px solid #ddd;">
+    <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 15px 0; background-color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <h3 style="color: #1f77b4; margin-top: 0; font-size: 1.4rem;">📦 {product}</h3>
+        <div style="color: #666; font-weight: 500; margin-bottom: 15px;">Package: {package_row.get('Package', 'Custom')}</div>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         
-        <h3 style="color: #ff7f0e;">📝 Factor Checklist</h3>
-        <ul style="list-style-type: none; padding-left: 0;">
+        <div style="color: #ff7f0e; font-weight: 600; margin-bottom: 8px;">📝 Factor Checklist</div>
+        <ul style="list-style-type: none; padding-left: 0; margin-bottom: 15px; font-size: 0.95rem;">
     """
     
     # Factors
@@ -210,46 +210,44 @@ def format_budget_report(product, package_row, factors, breakdown):
         users = factors.get('num_users')
         bw = factors.get('data_backward_days')
         html += f"""
-            <li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
-            <li>{'✅' if bw else '❌'} <b>Data Backward:</b> {bw if bw else 'Not found (Using Default)'} Days</li>
+            <li style="margin-bottom: 4px;">{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Default'}</li>
+            <li style="margin-bottom: 4px;">{'✅' if bw else '❌'} <b>Data Backward:</b> {bw if bw else 'Default'} Days</li>
         """
     elif product == 'Warroom':
         users = factors.get('num_users')
         tx = factors.get('monthly_transactions')
         chatbot = factors.get('chatbot_required')
         html += f"""
-            <li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
-            <li>{'✅' if tx else '❌'} <b>Monthly Transactions:</b> {tx if tx else 'Not found (Using Default)'} Msgs</li>
-            <li>✅ <b>Chatbot Required:</b> {'Yes' if chatbot else 'No (Assumed)'}</li>
+            <li style="margin-bottom: 4px;">{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Default'}</li>
+            <li style="margin-bottom: 4px;">{'✅' if tx else '❌'} <b>Monthly Transactions:</b> {tx if tx else 'Default'} Msgs</li>
+            <li style="margin-bottom: 4px;">✅ <b>Chatbot Required:</b> {'Yes' if chatbot else 'No'}</li>
         """
     
     html += """
         </ul>
-        <hr style="border: 1px solid #ddd;">
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
         
-        <h3 style="color: #ff7f0e;">📋 Package Details</h3>
-        <ul>
+        <div style="color: #ff7f0e; font-weight: 600; margin-bottom: 8px;">📋 Package Details</div>
+        <ul style="padding-left: 20px; font-size: 0.95rem; margin-bottom: 15px;">
     """
     
     # Package details
     init_fee = package_row.get('Initial_Fee (THB)', 0)
-    html += f"<li><b>Initial Fee:</b> {format_money(init_fee)} THB (one-time)</li>"
+    html += f"<li><b>Initial Fee:</b> {format_money(init_fee)} THB</li>"
     
     if product == 'Zocial Eye':
         html += f"""
-            <li><b>Message limit per contract:</b> {format_money(package_row.get('Message_Limit_PerContract (Messages)'))} messages</li>
-            <li><b>Campaign limit:</b> {get_val('Campaign_Limit', 'Campaigns')}</li>
-            <li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
+            <li><b>Message limit:</b> {format_money(package_row.get('Message_Limit_PerContract (Messages)'))}</li>
+            <li><b>Campaign limit:</b> {get_val('Campaign_Limit')}</li>
+            <li><b>User limit:</b> {get_val('User_Limit (User)')}</li>
             <li><b>Data backward:</b> {format_days(package_row.get('Data_Backward (Days)'))}</li>
-            <li><b>Insight prompts:</b> {get_val('Insight_Prompts')}</li>
         """
     elif product == 'Warroom':
         tx_limit = package_row.get('Transaction_Limit_PerMonth (Messages)') or package_row.get('Message_Limit_PerMonth (Messages)')
         html += f"""
-            <li><b>Message/Transaction limit:</b> {format_money(tx_limit) if tx_limit else 'Unlimited'}</li>
-            <li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
-            <li><b>Owned social channel:</b> {get_val('Owned_Social_Channel (Account)', 'channels')}</li>
-            <li><b>Chat history:</b> {get_val('Chat_History')}</li>
+            <li><b>Tx Limit:</b> {format_money(tx_limit) if tx_limit else 'Unlimited'}</li>
+            <li><b>User limit:</b> {get_val('User_Limit (User)')}</li>
+            <li><b>Social Channel:</b> {get_val('Owned_Social_Channel (Account)')}</li>
         """
     
     html += f"<li><b>Annual Base Price:</b> {format_money(package_row.get('Total_Price_Per_Year (THB)'))} THB</li>"
@@ -258,13 +256,13 @@ def format_budget_report(product, package_row, factors, breakdown):
     # Add-ons
     if breakdown['addon_cost'] > 0:
         html += """
-            <hr style="border: 1px solid #ddd;">
-            <h3 style="color: #ff7f0e;">🔧 Add-ons</h3>
-            <ul>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <div style="color: #ff7f0e; font-weight: 600; margin-bottom: 8px;">🔧 Add-ons</div>
+            <ul style="padding-left: 20px; font-size: 0.95rem;">
         """
         for detail in breakdown['details']:
             html += f"<li>{detail}</li>"
-        html += f"<li><b>Total Add-ons Cost:</b> {format_money(breakdown['addon_cost'])} THB/Year</li>"
+        html += f"<li><b>Add-ons Cost:</b> {format_money(breakdown['addon_cost'])} THB</li>"
         html += "</ul>"
     
     # Total
@@ -273,13 +271,12 @@ def format_budget_report(product, package_row, factors, breakdown):
         grand_total += init_fee
     
     html += f"""
-        <hr style="border: 2px solid #1f77b4;">
-        <h2 style="color: #28a745; text-align: center;">💰 TOTAL ANNUAL PRICE: {format_money(grand_total)} THB/Year</h2>
+        <hr style="border: 0; border-top: 2px solid #f0f0f0; margin: 20px 0;">
+        <h4 style="color: #28a745; text-align: center; margin: 0; font-size: 1.3rem;">💰 TOTAL: {format_money(grand_total)} THB/Year</h4>
     </div>
     """
     
-    # ✅ FIX: FORCE CLEANUP WHITESPACE BEFORE RETURNING
-    # This prevents Streamlit from interpreting indented HTML as Code Blocks
+    # Clean whitespace
     clean_html = "\n".join([line.lstrip() for line in html.split('\n')])
     
     return clean_html
