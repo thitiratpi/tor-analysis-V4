@@ -616,8 +616,8 @@ with tab_verify:
                 "📝 Status": st.column_config.TextColumn("Status", width="small", disabled=True),
                 "Matched_Keyword": st.column_config.TextColumn("Matched Spec", width="medium"),
             }
-            for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔵 {prod}", width="small")
-            for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🟠 {impl}", width="small")
+            for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔹 {prod}", width="small")
+            for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🔸 {impl}", width="small")
 
             # LEGEND
             st.markdown("""
