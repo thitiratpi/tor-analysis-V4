@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.4.9\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.5.0\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -79,7 +79,7 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 1rem;
         transition: transform 0.2s;
-        /* height: 100%;  <-- REMOVED to let card fit content */
+        height: 100%;
     }
     
     .custom-card:hover {
@@ -158,7 +158,19 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    /* Primary Button Override */
+    /* Primary Button Override (Submit Button in Form) */
+    div[data-testid="stForm"] button[kind="secondary"] {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        margin-top: 10px;
+    }
+    div[data-testid="stForm"] button[kind="secondary"]:hover {
+        box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
+        color: white;
+    }
+
     div[data-testid="stButton"] button[kind="primary"] {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         color: white;
@@ -519,7 +531,7 @@ with tab_verify:
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
 
-        # --- DISPLAY STATS (CLEAN DESIGN - CENTERED - NO ICONS/BG) ---
+        # --- DISPLAY STATS ---
         sc1, sc2, sc3 = st.columns([1, 1.5, 1.5])
         
         with sc1:
@@ -569,149 +581,161 @@ with tab_verify:
 
         st.markdown("### 📋 Detailed Verification")
 
-        # --- DATA EDITOR ---
-        df = st.session_state.processed_df.copy()
-        
-        # Define options & Generate Checkbox Columns
-        product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
-        impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
+        # --- DATA EDITOR IN FORM ---
+        # ✅ FIX: Using st.form to prevent flickering on every click
+        with st.form("editor_form"):
+            df = st.session_state.processed_df.copy()
+            
+            # Define options & Generate Checkbox Columns
+            product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
+            impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
 
-        if 'original_selections' not in st.session_state or len(st.session_state.original_selections) == 0:
-            st.session_state.original_selections = {}
-            for idx in df.index:
-                st.session_state.original_selections[idx] = {
-                    'products': str(df.loc[idx, 'Product_Match']),
-                    'implementation': str(df.loc[idx, 'Implementation'])
-                }
+            if 'original_selections' not in st.session_state or len(st.session_state.original_selections) == 0:
+                st.session_state.original_selections = {}
+                for idx in df.index:
+                    st.session_state.original_selections[idx] = {
+                        'products': str(df.loc[idx, 'Product_Match']),
+                        'implementation': str(df.loc[idx, 'Implementation'])
+                    }
 
-        for prod in product_options:
-            df[f"📦 {prod}"] = df['Product_Match'].apply(lambda x: prod in str(x))
-        for impl in impl_options:
-            df[f"🔧 {impl}"] = df['Implementation'].apply(lambda x: impl in str(x))
-        
-        if '📝 Status' not in df.columns: df['📝 Status'] = '🤖 Auto'
-        df['_original_idx'] = df.index
-        df.index = range(1, len(df) + 1)
-        df.index.name = 'No.'
+            for prod in product_options:
+                df[f"📦 {prod}"] = df['Product_Match'].apply(lambda x: prod in str(x))
+            for impl in impl_options:
+                df[f"🔧 {impl}"] = df['Implementation'].apply(lambda x: impl in str(x))
+            
+            if '📝 Status' not in df.columns: df['📝 Status'] = '🤖 Auto'
+            df['_original_idx'] = df.index
+            df.index = range(1, len(df) + 1)
+            df.index.name = 'No.'
 
-        # Column Config
-        column_config = {
-            "Product_Match": None, "Implementation": None, "_original_idx": None,
-            "TOR_Sentence": st.column_config.TextColumn("Requirement", width="large", disabled=True),
-            "Requirement_Type": st.column_config.SelectboxColumn("Type", options=["Functional", "Non-Functional"], width="medium"),
-            "📝 Status": st.column_config.TextColumn("Status", width="small", disabled=True),
-            "Matched_Keyword": st.column_config.TextColumn("Matched Spec", width="medium"),
-        }
-        for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔵 {prod}", width="small")
-        for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🟠 {impl}", width="small")
+            # Column Config
+            column_config = {
+                "Product_Match": None, "Implementation": None, "_original_idx": None,
+                "TOR_Sentence": st.column_config.TextColumn("Requirement", width="large", disabled=True),
+                "Requirement_Type": st.column_config.SelectboxColumn("Type", options=["Functional", "Non-Functional"], width="medium"),
+                "📝 Status": st.column_config.TextColumn("Status", width="small", disabled=True),
+                "Matched_Keyword": st.column_config.TextColumn("Matched Spec", width="medium"),
+            }
+            for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔵 {prod}", width="small")
+            for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🟠 {impl}", width="small")
 
-        # LEGEND
-        st.markdown("""
-        <div class="legend-box">
-            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <span class="legend-badge" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">Selected Product</span>
-                    <div style="font-size:0.85rem; color:#475569;">
-                        • Can select multiple options<br>• Choose all that apply
+            # LEGEND
+            st.markdown("""
+            <div class="legend-box">
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">Selected Product</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            • Can select multiple options<br>• Choose all that apply
+                        </div>
                     </div>
-                </div>
-                <div style="flex: 1; min-width: 250px;">
-                    <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
-                    <div style="font-size:0.85rem; color:#475569;">
-                        • ⚠️ Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                    <div style="flex: 1; min-width: 250px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            • ⚠️ Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                        </div>
                     </div>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <span class="legend-badge" style="background: linear-gradient(135deg, #64748B, #94A3B8);">Status</span>
-                    <div style="font-size:0.85rem; color:#475569;">
-                        🤖 Auto = System generated<br>✅ Edited = Manually changed
+                    <div style="flex: 1; min-width: 200px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #64748B, #94A3B8);">Status</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            🤖 Auto = System generated<br>✅ Edited = Manually changed
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-        # RENDER EDITOR
-        edited_df = st.data_editor(
-            df,
-            column_config=column_config,
-            column_order=[
-                "TOR_Sentence", "Requirement_Type",
-                "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
-                "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
-                "📝 Status", "Matched_Keyword"
-            ],
-            hide_index=False, use_container_width=True, num_rows="dynamic", height=500, key="data_editor"
-        )
-
-        # LOGIC ENFORCEMENT
-        needs_rerun = False
-        def normalize_selection(val_str):
-            if not val_str or pd.isna(val_str) or val_str == 'nan': return []
-            clean = str(val_str).replace("[","").replace("]","").replace("'","")
-            return sorted([x.strip() for x in clean.split(',') if x.strip() and x.strip() != 'nan'])
-
-        impl_cols = [f"🔧 {i}" for i in impl_options]
-
-        for i in edited_df.index:
-            # Single Select Logic
-            checked_impls = [col for col in impl_cols if edited_df.loc[i, col]]
-            if len(checked_impls) > 1:
-                newly_checked = [col for col in impl_cols if edited_df.loc[i, col] and not df.loc[i, col]]
-                if newly_checked:
-                    keep_col = newly_checked[0]
-                    for col in impl_cols:
-                        if col != keep_col: edited_df.loc[i, col] = False
-                else:
-                    if edited_df.loc[i, '🔧 Non-Compliant']:
-                        edited_df.loc[i, '🔧 Standard'] = False; edited_df.loc[i, '🔧 Customize/Integration'] = False
-                    elif edited_df.loc[i, '🔧 Customize/Integration']: edited_df.loc[i, '🔧 Standard'] = False
-                needs_rerun = True
-
-            # Non-Compliant Logic
-            if edited_df.loc[i, '📦 Non-Compliant']:
-                prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
-                if any(edited_df.loc[i, c] for c in prod_cols_to_clear):
-                    for c in prod_cols_to_clear: edited_df.loc[i, c] = False
-                    needs_rerun = True
-                if not edited_df.loc[i, '🔧 Non-Compliant']:
-                    edited_df.loc[i, '🔧 Non-Compliant'] = True; edited_df.loc[i, '🔧 Standard'] = False; edited_df.loc[i, '🔧 Customize/Integration'] = False
-                    needs_rerun = True
-
-            # Status Update
-            curr_prods = [p for p in product_options if edited_df.loc[i, f"📦 {p}"]]
-            curr_impls = [imp for imp in impl_options if edited_df.loc[i, f"🔧 {imp}"]]
-            curr_prod_str = ", ".join(curr_prods)
-            curr_impl_str = ", ".join(curr_impls)
+            # RENDER EDITOR
+            edited_df_input = st.data_editor(
+                df,
+                column_config=column_config,
+                column_order=[
+                    "TOR_Sentence", "Requirement_Type",
+                    "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
+                    "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
+                    "📝 Status", "Matched_Keyword"
+                ],
+                hide_index=False, use_container_width=True, num_rows="dynamic", height=500, key="data_editor_form"
+            )
             
-            orig_idx = edited_df.loc[i, '_original_idx']
-            orig_data = st.session_state.original_selections.get(orig_idx, {})
-            
-            is_changed = (normalize_selection(curr_prod_str) != normalize_selection(orig_data.get('products'))) or \
-                         (normalize_selection(curr_impl_str) != normalize_selection(orig_data.get('implementation')))
-            
-            new_status = '✅ Edited' if is_changed else '🤖 Auto'
-            
-            if edited_df.loc[i, '📝 Status'] != new_status:
-                edited_df.loc[i, '📝 Status'] = new_status
-                needs_rerun = True
-            
-            st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str
-            st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str
-            st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = edited_df.loc[i, 'Requirement_Type']
-            
-            if '📝 Status' not in st.session_state.processed_df.columns:
-                 st.session_state.processed_df['📝 Status'] = '🤖 Auto'
-            st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
+            submit_changes = st.form_submit_button("💾 Save Changes (Apply Logic)")
 
-        if needs_rerun: st.rerun()
-        st.session_state.edited_df = edited_df
+        # --- LOGIC ENFORCEMENT ON SUBMIT ---
+        if submit_changes:
+            st.session_state.edited_df = edited_df_input # Capture state
+            
+            def normalize_selection(val_str):
+                if not val_str or pd.isna(val_str) or val_str == 'nan': return []
+                clean = str(val_str).replace("[","").replace("]","").replace("'","")
+                return sorted([x.strip() for x in clean.split(',') if x.strip() and x.strip() != 'nan'])
+
+            impl_cols = [f"🔧 {i}" for i in impl_options]
+            
+            # Use local variable for processing
+            working_df = edited_df_input.copy()
+
+            for i in working_df.index:
+                orig_idx = working_df.loc[i, '_original_idx']
+                
+                # 1. Single Select Logic (Implementation)
+                checked_impls = [col for col in impl_cols if working_df.loc[i, col]]
+                if len(checked_impls) > 1:
+                    # If multiple checked, keep only the Non-Compliant if present, else keep the first one/Standard/Customize logic
+                    # Simple rule: If Non-Compliant is checked, uncheck others. Else, uncheck Standard if Customize is checked (prioritize specific)
+                    if working_df.loc[i, '🔧 Non-Compliant']:
+                         working_df.loc[i, '🔧 Standard'] = False
+                         working_df.loc[i, '🔧 Customize/Integration'] = False
+                    elif working_df.loc[i, '🔧 Customize/Integration'] and working_df.loc[i, '🔧 Standard']:
+                         working_df.loc[i, '🔧 Standard'] = False
+                
+                # 2. Non-Compliant Logic (Product)
+                if working_df.loc[i, '📦 Non-Compliant']:
+                    prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
+                    for c in prod_cols_to_clear: 
+                        working_df.loc[i, c] = False
+                    
+                    # Auto force Implementation to Non-Compliant
+                    working_df.loc[i, '🔧 Non-Compliant'] = True
+                    working_df.loc[i, '🔧 Standard'] = False
+                    working_df.loc[i, '🔧 Customize/Integration'] = False
+
+                # 3. Construct Strings & Status Update
+                curr_prods = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
+                curr_impls = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
+                curr_prod_str = ", ".join(curr_prods)
+                curr_impl_str = ", ".join(curr_impls)
+                
+                orig_data = st.session_state.original_selections.get(orig_idx, {})
+                
+                is_changed = (normalize_selection(curr_prod_str) != normalize_selection(orig_data.get('products'))) or \
+                             (normalize_selection(curr_impl_str) != normalize_selection(orig_data.get('implementation')))
+                
+                new_status = '✅ Edited' if is_changed else '🤖 Auto'
+                working_df.loc[i, '📝 Status'] = new_status
+                
+                # Update Main Dataframe
+                st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str
+                st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str
+                st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = working_df.loc[i, 'Requirement_Type']
+                st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
+
+            # Save formatted df to display again
+            st.session_state.edited_df = working_df
+            st.success("✅ Changes Saved & Logic Applied!")
+            time.sleep(0.5)
+            st.rerun()
 
         # --- FOOTER ACTIONS ---
         st.markdown("### 💾 Export & Save")
         
-        # Prepare Data
-        raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
+        # Prepare Data (using edited_df if available)
+        final_df = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
+        
+        # Helper to regenerate formatted df from processed_df if needed for saving
+        # But we already have logic to sync processed_df on submit
+        
+        # Filter Non-Compliant for Sheet
+        raw_save_data = prepare_save_data(final_df, product_options, impl_options) # Use helper
         valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
         def split_languages(row):
@@ -855,4 +879,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseTOR Sense v2.4.9 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseTOR Sense v2.5.0 | Session: {datetime.now().strftime('%Y-%m-%d')}")
