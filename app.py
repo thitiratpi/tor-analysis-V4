@@ -550,7 +550,7 @@ if st.session_state.analysis_done:
     # Tabs for different views
     tab1, tab2, tab3 = st.tabs(["📊 Data Editor", "📈 Statistics", "🔍 Filter & Search"])
     
-with tab1:
+    with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
         
         # ✅ FIX 2: STRONGER CSS for text wrapping
