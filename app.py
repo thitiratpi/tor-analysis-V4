@@ -19,14 +19,14 @@ from utils.data_validator import validate_products, check_duplicates, prepare_sa
 # ==========================================
 
 st.set_page_config(
-    page_title="WiseSight TOR Analyzer",
+    page_title="WiseTOR Sense",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.5\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.4.6\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -67,18 +67,19 @@ st.markdown("""
         background: -webkit-linear-gradient(45deg, #1E3A8A, #3B82F6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        font-weight: 800;
     }
 
     /* ===== CARDS & CONTAINERS ===== */
     .custom-card {
         background-color: white;
         padding: 1.5rem;
-        border-radius: 12px;
+        border-radius: 16px; /* Softer rounded corners */
         border: 1px solid var(--border-color);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 1rem;
         transition: transform 0.2s;
-        height: 100%; /* Ensure equal height */
+        height: 100%;
     }
     
     .custom-card:hover {
@@ -86,10 +87,10 @@ st.markdown("""
     }
 
     .file-info-card {
-        background-color: #F1F5F9;
+        background-color: #F8FAFC;
         padding: 1.25rem;
-        border-radius: 10px;
-        border-left: 5px solid var(--primary-color);
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -98,16 +99,17 @@ st.markdown("""
 
     /* ===== STATISTICS DASHBOARD (REFINED) ===== */
     .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 1.2px;
-        color: #64748B; /* Cool Gray */
+        letter-spacing: 1px;
+        color: #64748B;
         font-weight: 700;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.5rem;
+        text-align: center; /* CENTER ALIGNMENT */
     }
     
     .stat-value-big {
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: 800;
         color: var(--primary-color);
         line-height: 1;
@@ -118,29 +120,21 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 0;
+        padding: 12px 10px; /* More spacing */
         border-bottom: 1px solid #F1F5F9;
     }
     .stat-row:last-child {
         border-bottom: none;
     }
     .stat-name {
-        font-size: 1rem;
-        color: #334155; /* Slate 700 */
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        font-size: 1.05rem;
+        color: #334155;
+        font-weight: 500;
     }
     .stat-count {
-        font-size: 1rem;
+        font-size: 1.2rem;
         font-weight: 700;
-        color: var(--primary-color);
-        background-color: #EFF6FF; /* Light Blue Badge */
-        padding: 4px 12px;
-        border-radius: 20px;
-        min-width: 40px;
-        text-align: center;
+        color: var(--primary-color); /* Just text color, no background */
     }
 
     /* ===== BUTTONS ===== */
@@ -361,7 +355,7 @@ with st.sidebar:
 # MAIN APP
 # ==========================================
 
-st.markdown('<div class="main-header">🔍 WiseSight TOR Analyzer</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">WiseTOR Sense</div>', unsafe_allow_html=True)
 st.caption("AI-Powered Compliance Checking & Budget Estimation Tool")
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -374,7 +368,7 @@ tab_verify, tab_budget = st.tabs(["📊 Results & Verification", "💰 Budget Es
 with tab_verify:
 
     # ===== STEP 1: FILE UPLOAD =====
-    st.markdown("### 📂 1. Upload TOR Document")
+    st.markdown("### 📂 Upload TOR Document")
     
     col1, col2 = st.columns([3, 1])
 
@@ -492,7 +486,7 @@ with tab_verify:
 
     # ===== STEP 3: RESULTS & STATISTICS =====
     if st.session_state.analysis_done:
-        st.markdown("### 📊 2. Analysis Results")
+        st.markdown("### 📊 Analysis Results")
         
         # Use edited_df if available, else processed_df for stats
         df_stats = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
@@ -525,16 +519,16 @@ with tab_verify:
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
 
-        # --- DISPLAY STATS (NEW PROFESSIONAL DESIGN) ---
+        # --- DISPLAY STATS (CLEAN DESIGN - NO ICONS, NO BACKGROUND) ---
         sc1, sc2, sc3 = st.columns([1, 1.5, 1.5])
         
         with sc1:
             st.markdown(f"""
-            <div class="custom-card" style="text-align:center;">
+            <div class="custom-card" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
                 <div class="stat-label">Total Requirements</div>
                 <div class="stat-value-big">{total_req}</div>
-                <hr style="margin: 15px 0; border:0; border-top:1px solid #F1F5F9;">
-                <div style="font-size:0.95rem; display:flex; justify-content:space-between; padding:0 10px;">
+                <div style="width:100%; border-top:1px solid #F1F5F9; margin: 20px 0;"></div>
+                <div style="width:100%; font-size:0.95rem; display:flex; justify-content:space-between; padding:0 15px;">
                     <span style="color:#10B981; font-weight:600;">✅ Edited: {cnt_edited}</span>
                     <span style="color:#64748B; font-weight:600;">🤖 Auto: {cnt_auto}</span>
                 </div>
@@ -546,18 +540,18 @@ with tab_verify:
             <div class="custom-card">
                 <div class="stat-label">Selected Products</div>
                 <div class="stat-row">
-                    <span class="stat-name">🔹 Zocial Eye</span> <span class="stat-count">{cnt_ze}</span>
+                    <span class="stat-name">Zocial Eye</span> <span class="stat-count">{cnt_ze}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-name">🔹 Warroom</span> <span class="stat-count">{cnt_wr}</span>
+                    <span class="stat-name">Warroom</span> <span class="stat-count">{cnt_wr}</span>
                 </div>
                 <div class="stat-row">
-                    <span class="stat-name">🔹 Outsource</span> <span class="stat-count">{cnt_out}</span>
+                    <span class="stat-name">Outsource</span> <span class="stat-count">{cnt_out}</span>
                 </div>
-                <div class="stat-row">
-                    <span class="stat-name">🔹 Other</span> <span class="stat-count">{cnt_oth}</span>
+                <div class="stat-row" style="border-bottom:none;">
+                    <span class="stat-name">Other</span> <span class="stat-count">{cnt_oth}</span>
                 </div>
-                </div>
+            </div>
             """, unsafe_allow_html=True)
             
         with sc3:
@@ -565,16 +559,16 @@ with tab_verify:
             <div class="custom-card">
                 <div class="stat-label">Implementation Type</div>
                 <div class="stat-row">
-                    <span class="stat-name">🔸 Standard</span> <span class="stat-count">{cnt_std}</span>
+                    <span class="stat-name">Standard</span> <span class="stat-count">{cnt_std}</span>
                 </div>
-                <div class="stat-row">
-                    <span class="stat-name">🔸 Customize</span> <span class="stat-count">{cnt_cust}</span>
+                <div class="stat-row" style="border-bottom:none;">
+                    <span class="stat-name">Customize</span> <span class="stat-count">{cnt_cust}</span>
                 </div>
                 <div style="height: 5.5rem;"></div>
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("### 📋 3. Detailed Verification")
+        st.markdown("### 📋 Detailed Verification")
 
         # --- DATA EDITOR ---
         df = st.session_state.processed_df.copy()
@@ -612,7 +606,7 @@ with tab_verify:
         for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔵 {prod}", width="small")
         for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🟠 {impl}", width="small")
 
-        # LEGEND (New Design)
+        # LEGEND
         st.markdown("""
         <div class="legend-box">
             <div style="display: flex; gap: 30px; flex-wrap: wrap;">
@@ -715,7 +709,7 @@ with tab_verify:
         st.session_state.edited_df = edited_df
 
         # --- FOOTER ACTIONS ---
-        st.markdown("### 💾 4. Export & Save")
+        st.markdown("### 💾 Export & Save")
         
         # Prepare Data
         raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
@@ -862,4 +856,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.5 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseTOR Sense v2.4.6 | Session: {datetime.now().strftime('%Y-%m-%d')}")
