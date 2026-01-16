@@ -19,14 +19,14 @@ from utils.data_validator import validate_products, check_duplicates, prepare_sa
 # ==========================================
 
 st.set_page_config(
-    page_title="WiseSight TOR Analyzer",
+    page_title="WiseTOR Sense",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.4\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.4.4\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -354,7 +354,7 @@ with st.sidebar:
 # MAIN APP
 # ==========================================
 
-st.markdown('<div class="main-header">🔍 WiseSight TOR Analyzer</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">🔍 WiseTOR Sense</div>', unsafe_allow_html=True)
 st.caption("AI-Powered Compliance Checking & Budget Estimation Tool")
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -863,4 +863,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.4 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseTOR Sense v2.4.4 | Session: {datetime.now().strftime('%Y-%m-%d')}")
