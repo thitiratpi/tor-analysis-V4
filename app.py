@@ -19,14 +19,14 @@ from utils.data_validator import validate_products, check_duplicates, prepare_sa
 # ==========================================
 
 st.set_page_config(
-    page_title="WiseTOR Sense",
+    page_title="WiseSight TOR Analyzer",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.4.4\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.4.5\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -78,6 +78,7 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 1rem;
         transition: transform 0.2s;
+        height: 100%; /* Ensure equal height */
     }
     
     .custom-card:hover {
@@ -95,20 +96,21 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* ===== STATISTICS DASHBOARD ===== */
+    /* ===== STATISTICS DASHBOARD (REFINED) ===== */
     .stat-label {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 1.2px;
-        color: #64748B;
+        color: #64748B; /* Cool Gray */
         font-weight: 700;
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
     }
     
     .stat-value-big {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: 800;
         color: var(--primary-color);
+        line-height: 1;
     }
 
     /* Professional List Row Style */
@@ -116,24 +118,29 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px 0;
+        padding: 10px 0;
         border-bottom: 1px solid #F1F5F9;
     }
     .stat-row:last-child {
         border-bottom: none;
     }
     .stat-name {
-        font-size: 1.1rem; /* Increased size */
-        color: var(--text-color);
-        font-weight: 500;
+        font-size: 1rem;
+        color: #334155; /* Slate 700 */
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     .stat-count {
-        font-size: 1.3rem; /* Standardized size */
+        font-size: 1rem;
         font-weight: 700;
         color: var(--primary-color);
-    }
-    .stat-count.danger {
-        color: var(--danger-color);
+        background-color: #EFF6FF; /* Light Blue Badge */
+        padding: 4px 12px;
+        border-radius: 20px;
+        min-width: 40px;
+        text-align: center;
     }
 
     /* ===== BUTTONS ===== */
@@ -354,7 +361,7 @@ with st.sidebar:
 # MAIN APP
 # ==========================================
 
-st.markdown('<div class="main-header">🔍 WiseTOR Sense</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">🔍 WiseSight TOR Analyzer</div>', unsafe_allow_html=True)
 st.caption("AI-Powered Compliance Checking & Budget Estimation Tool")
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -367,7 +374,7 @@ tab_verify, tab_budget = st.tabs(["📊 Results & Verification", "💰 Budget Es
 with tab_verify:
 
     # ===== STEP 1: FILE UPLOAD =====
-    st.markdown("### 📂 Upload TOR Document")
+    st.markdown("### 📂 1. Upload TOR Document")
     
     col1, col2 = st.columns([3, 1])
 
@@ -485,7 +492,7 @@ with tab_verify:
 
     # ===== STEP 3: RESULTS & STATISTICS =====
     if st.session_state.analysis_done:
-        st.markdown("### 📊 Analysis Results")
+        st.markdown("### 📊 2. Analysis Results")
         
         # Use edited_df if available, else processed_df for stats
         df_stats = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
@@ -550,11 +557,7 @@ with tab_verify:
                 <div class="stat-row">
                     <span class="stat-name">🔹 Other</span> <span class="stat-count">{cnt_oth}</span>
                 </div>
-                <div class="stat-row" style="border-bottom:none;">
-                    <span class="stat-name" style="color:#EF4444;">🔴 Non-Compliant</span> 
-                    <span class="stat-count danger">{cnt_nc_prod}</span>
                 </div>
-            </div>
             """, unsafe_allow_html=True)
             
         with sc3:
@@ -567,15 +570,11 @@ with tab_verify:
                 <div class="stat-row">
                     <span class="stat-name">🔸 Customize</span> <span class="stat-count">{cnt_cust}</span>
                 </div>
-                <div class="stat-row" style="border-bottom:none;">
-                    <span class="stat-name" style="color:#EF4444;">🔴 Non-Compliant</span> 
-                    <span class="stat-count danger">{cnt_nc_impl}</span>
-                </div>
-                <div style="height: 3.8rem;"></div>
+                <div style="height: 5.5rem;"></div>
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("### 📋 Detailed Verification")
+        st.markdown("### 📋 3. Detailed Verification")
 
         # --- DATA EDITOR ---
         df = st.session_state.processed_df.copy()
@@ -626,7 +625,7 @@ with tab_verify:
                 <div style="flex: 1; min-width: 250px;">
                     <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
                     <div style="font-size:0.85rem; color:#475569;">
-                        • Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                        • ⚠️ Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
                     </div>
                 </div>
                 <div style="flex: 1; min-width: 200px;">
@@ -716,7 +715,7 @@ with tab_verify:
         st.session_state.edited_df = edited_df
 
         # --- FOOTER ACTIONS ---
-        st.markdown("### 💾 Export & Save")
+        st.markdown("### 💾 4. Export & Save")
         
         # Prepare Data
         raw_save_data = prepare_save_data(edited_df, product_options, impl_options)
@@ -863,4 +862,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseTOR Sense v2.4.4 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.4.5 | Session: {datetime.now().strftime('%Y-%m-%d')}")
