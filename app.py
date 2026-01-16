@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.1\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.4.2\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -53,7 +53,7 @@ st.markdown("""
         color: var(--text-color);
     }
     
-    h1, h2, h3 {
+    h1, h2, h3, h4, h5 {
         color: var(--secondary-color) !important;
         font-weight: 700 !important;
         letter-spacing: -0.5px;
@@ -311,7 +311,7 @@ with st.sidebar:
     st.markdown("---")
     
     # ===== 4. SAVE HISTORY =====
-    st.markdown("### 📜 Save History")
+    st.markdown("### 📜 History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
             with st.expander(f"Update #{len(st.session_state.save_history)-idx} - {record['timestamp'].split(' ')[1]}", expanded=False):
@@ -790,17 +790,19 @@ with tab_budget:
             st.markdown("#### ✏️ Adjust Budget Factors")
             
             with st.container():
-                st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+                # ✅ REMOVED <div class='custom-card'> wrapper
                 factors = st.session_state.budget_factors
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    st.caption("🔹 Zocial Eye Configuration")
+                    # ✅ CHANGED st.caption to st.markdown H5
+                    st.markdown("##### 🔹 Zocial Eye Configuration")
                     ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
                     ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
                 
                 with c2:
-                    st.caption("🔸 Warroom Configuration")
+                    # ✅ CHANGED st.caption to st.markdown H5
+                    st.markdown("##### 🔸 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
                     wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
                     
@@ -809,8 +811,10 @@ with tab_budget:
                     wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0))
                     wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
                 
-                st.markdown("<hr>", unsafe_allow_html=True)
-                st.caption("➕ Additional Costs")
+                st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+                
+                # ✅ CHANGED st.caption to st.markdown H5
+                st.markdown("##### ➕ Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
                     md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1)
@@ -825,8 +829,8 @@ with tab_budget:
                         'chatbot_required': wr_bot, 'mandays': md_input, 'other_expenses': other_cost_input
                     })
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+                # ✅ REMOVED </div> closure
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.1 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.4.2 | Session: {datetime.now().strftime('%Y-%m-%d')}")
