@@ -550,34 +550,36 @@ if st.session_state.analysis_done:
     # Tabs for different views
     tab1, tab2, tab3 = st.tabs(["📊 Data Editor", "📈 Statistics", "🔍 Filter & Search"])
     
-    with tab1:
+with tab1:
         st.caption("✏️ Click checkboxes to edit. Changes are saved automatically.")
         
-        # ✅ FIX 2: Enhanced CSS for text wrapping
+        # ✅ FIX 2: STRONGER CSS for text wrapping
         st.markdown("""
         <style>
-        /* ===== TEXT WRAPPING ===== */
-        /* Force text wrapping in all cells */
-        div[data-testid="stDataFrame"] [role="gridcell"] {
-            white-space: normal !important;
+        /* ===== FORCE TEXT WRAPPING ===== */
+        /* Target ALL cells in data editor */
+        div[data-testid="stDataFrame"] div[role="gridcell"] {
+            white-space: pre-wrap !important;
             word-wrap: break-word !important;
             overflow-wrap: break-word !important;
-            line-height: 1.4 !important;
-            padding: 8px !important;
+            word-break: break-word !important;
+            line-height: 1.5 !important;
+            padding: 12px 8px !important;
+            min-height: 60px !important;
         }
         
-        /* Specific wrapping for text columns */
-        div[data-testid="stDataFrame"] [aria-colindex="2"] [role="gridcell"],
-        div[data-testid="stDataFrame"] [aria-colindex="13"] [role="gridcell"] {
-            white-space: normal !important;
-            word-wrap: break-word !important;
-            max-width: 400px !important;
-        }
-        
-        /* Auto-adjust row height */
-        div[data-testid="stDataFrame"] [role="row"] {
-            min-height: auto !important;
+        /* Force row auto-height */
+        div[data-testid="stDataFrame"] div[role="row"] {
             height: auto !important;
+            min-height: 60px !important;
+        }
+        
+        /* Text columns - extra wrapping */
+        div[data-testid="stDataFrame"] div[aria-colindex="2"] div[role="gridcell"],
+        div[data-testid="stDataFrame"] div[aria-colindex="13"] div[role="gridcell"] {
+            white-space: pre-wrap !important;
+            max-width: 500px !important;
+            overflow: visible !important;
         }
         
         /* Status column styling */
@@ -629,7 +631,7 @@ if st.session_state.analysis_done:
         column_config = {
             "Product_Match": None,
             "Implementation": None,
-            "_original_idx": None,  # Hide helper column
+            "_original_idx": None,
             
             "TOR_Sentence": st.column_config.TextColumn(
                 "Requirement",
@@ -756,14 +758,24 @@ if st.session_state.analysis_done:
                 "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
                 "📝 Status",
                 "Matched_Keyword"
-            ]
+            ],
+            height=600  # ✅ Set fixed height for better rendering
         )
         
-        # ✅ FIX 1: Proper validation & status tracking
+        # ✅ FIX 1: IMPROVED validation & status tracking
         impl_cols = ['🔧 Standard', '🔧 Customize/Integration', '🔧 Non-Compliant']
         
-        # Reset user_modified_rows for this check
+        # Helper function to normalize selection string
+        def normalize_selection(value):
+            """Normalize selection to sorted list for comparison"""
+            if pd.isna(value) or value == '' or value == 'nan':
+                return []
+            items = [x.strip() for x in str(value).split(';') if x.strip()]
+            return sorted(items)
+        
+        # Reset user_modified_rows for fresh check
         st.session_state.user_modified_rows = set()
+        status_changed = False
         
         for idx in edited_df.index:
             # Get original index (0-based)
@@ -772,29 +784,34 @@ if st.session_state.analysis_done:
             # Get original values
             original = st.session_state.original_selections.get(original_idx, {})
             
-            # Get current selections
-            current_products = '; '.join([
+            # Get current selections as sorted lists
+            current_products_list = sorted([
                 prod for prod in product_options 
                 if edited_df.loc[idx, f'📦 {prod}']
             ])
-            current_impl = '; '.join([
+            current_impl_list = sorted([
                 impl for impl in impl_options 
                 if edited_df.loc[idx, f'🔧 {impl}']
             ])
             
-            # ✅ Compare current vs original
-            original_products = original.get('products', '')
-            original_impl = original.get('implementation', '')
+            # Get original selections as sorted lists
+            original_products_list = normalize_selection(original.get('products', ''))
+            original_impl_list = normalize_selection(original.get('implementation', ''))
             
-            # Check if ACTUALLY changed
-            products_changed = (current_products != original_products)
-            impl_changed = (current_impl != original_impl)
+            # ✅ Compare lists (order-independent)
+            products_changed = (current_products_list != original_products_list)
+            impl_changed = (current_impl_list != original_impl_list)
             
+            # Update status
             if products_changed or impl_changed:
                 st.session_state.user_modified_rows.add(original_idx)
-                edited_df.loc[idx, '📝 Status'] = '✅ Edited'
+                if edited_df.loc[idx, '📝 Status'] != '✅ Edited':
+                    edited_df.loc[idx, '📝 Status'] = '✅ Edited'
+                    status_changed = True
             else:
-                edited_df.loc[idx, '📝 Status'] = '🤖 Auto'
+                if edited_df.loc[idx, '📝 Status'] != '🤖 Auto':
+                    edited_df.loc[idx, '📝 Status'] = '🤖 Auto'
+                    status_changed = True
             
             # Product Non-Compliant logic
             if edited_df.loc[idx, '📦 Non-Compliant']:
