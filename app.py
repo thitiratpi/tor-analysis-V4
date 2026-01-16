@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import re
+import time  # ✅ Added for delay effect
 from datetime import datetime
 from io import BytesIO
 
@@ -25,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.6\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.7\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -181,9 +182,12 @@ with st.sidebar:
                             undo_last_update(record['data'], sheet_url)
                             st.session_state.save_history.pop(-1-idx)
                             st.success("✅ Undo successful!")
-                            st.rerun()
+                            time.sleep(1) # Wait for user to see success
+                            st.rerun()    # Refresh sidebar
                         except Exception as e:
                             st.error(f"❌ Undo failed: {e}")
+    else:
+        st.info("No save history yet")
 
 # ==========================================
 # MAIN APP
@@ -536,7 +540,7 @@ with tab_verify:
         # 2. Filter Non-Compliant
         valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
-        # 3. ✅ FIX: MAP COLUMNS FOR GOOGLE SHEET (USE UNDERSCORES)
+        # 3. ✅ MAP COLUMNS FOR GOOGLE SHEET (TH/ENG SPLIT)
         def split_languages(row):
             text = str(row['TOR_Sentence'])
             if re.search(r'[\u0E00-\u0E7F]', text):
@@ -545,7 +549,6 @@ with tab_verify:
                 return pd.Series(["", text]) # TH="", ENG=text
         
         if not valid_data.empty:
-            # Change column names to use UNDERSCORE instead of parentheses
             valid_data[['Sentence_TH', 'Sentence_ENG']] = valid_data.apply(split_languages, axis=1)
             final_save_data = valid_data[['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation']]
         else:
@@ -564,6 +567,11 @@ with tab_verify:
                             'data': final_save_data.to_dict('records')
                         })
                         st.success("✅ Saved!"); st.balloons()
+                        
+                        # ✅ FIX: FORCE RERUN TO UPDATE SIDEBAR HISTORY
+                        time.sleep(1.5)
+                        st.rerun()
+                        
                     except Exception as e: st.error(f"❌ Failed: {e}")
 
         with col_export:
@@ -718,4 +726,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.6 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.7 | Session: {datetime.now().strftime('%Y-%m-%d')}")
