@@ -26,75 +26,36 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.5.2\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.5.0\nPowered by Streamlit + Gemini AI"
     }
 )
 
 # ==========================================
-# CUSTOM CSS (PROFESSIONAL THEME & TABLE STYLING)
+# CUSTOM CSS (PROFESSIONAL THEME)
 # ==========================================
 st.markdown("""
 <style>
     /* ===== THEME VARIABLES ===== */
     :root {
-        --primary-color: #2563EB;
-        --secondary-color: #1E293B;
+        --primary-color: #2563EB; /* Royal Blue */
+        --secondary-color: #1E293B; /* Slate Dark */
         --bg-light: #F8FAFC;
         --border-color: #E2E8F0;
-    }
-
-    /* ===== TABLE HEADER COLORING (THE KEY FIX) ===== */
-    /* Product Columns (Blue) */
-    th[aria-label="Zocial Eye"], 
-    th[aria-label="Warroom"], 
-    th[aria-label="Outsource"], 
-    th[aria-label="Other Product"] {
-        background-color: #EFF6FF !important; /* Light Blue */
-        color: #1E3A8A !important;
-        border-bottom: 2px solid #2563EB !important;
-    }
-
-    /* Implementation Columns (Orange) */
-    th[aria-label="Standard"], 
-    th[aria-label="Customize/Integration"] {
-        background-color: #FFF7ED !important; /* Light Orange */
-        color: #9A3412 !important;
-        border-bottom: 2px solid #F97316 !important;
-    }
-
-    /* Non-Compliant Columns (Red) - For both Product and Impl */
-    th[aria-label="NC (Prod)"],
-    th[aria-label="NC (Impl)"] {
-        background-color: #FEF2F2 !important; /* Light Red */
-        color: #991B1B !important;
-        border-bottom: 2px solid #EF4444 !important;
-    }
-
-    /* Requirement & Type Columns (Gray) */
-    th[aria-label="Requirement"], 
-    th[aria-label="Type"],
-    th[aria-label="Status"],
-    th[aria-label="Matched Spec"] {
-        background-color: #F8FAFC !important;
-        color: #475569 !important;
-        border-bottom: 2px solid #CBD5E1 !important;
-    }
-
-    /* Adjust Header Font */
-    th {
-        font-size: 0.95rem !important;
-        font-weight: 700 !important;
+        --success-color: #10B981;
+        --warning-color: #F59E0B;
+        --danger-color: #EF4444;
+        --text-color: #334155;
     }
 
     /* ===== GLOBAL TYPOGRAPHY ===== */
     .stApp {
         background-color: white;
-        color: #334155;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: var(--text-color);
     }
     
     h1, h2, h3, h4, h5 {
-        color: #1E293B !important;
+        color: var(--secondary-color) !important;
         font-weight: 700 !important;
         letter-spacing: -0.5px;
     }
@@ -109,16 +70,16 @@ st.markdown("""
         font-weight: 800;
     }
 
-    /* ===== CARDS ===== */
+    /* ===== CARDS & CONTAINERS ===== */
     .custom-card {
         background-color: white;
         padding: 1.5rem;
         border-radius: 16px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 1rem;
         transition: transform 0.2s;
-        /* height: 100%; Removed to allow content fit */
+        height: 100%;
     }
     
     .custom-card:hover {
@@ -136,7 +97,7 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* ===== STATS ===== */
+    /* ===== STATISTICS DASHBOARD (REFINED) ===== */
     .stat-label {
         font-size: 0.9rem;
         text-transform: uppercase;
@@ -144,16 +105,17 @@ st.markdown("""
         color: #64748B;
         font-weight: 700;
         margin-bottom: 1.5rem;
-        text-align: center;
+        text-align: center; /* CENTER ALIGNMENT */
     }
     
     .stat-value-big {
         font-size: 2.0rem;
         font-weight: 800;
-        color: #2563EB;
+        color: var(--primary-color);
         line-height: 1;
     }
-    
+
+    /* Professional List Row Style */
     .stat-row {
         display: flex;
         justify-content: space-between;
@@ -161,21 +123,18 @@ st.markdown("""
         padding: 12px 10px;
         border-bottom: 1px solid #F1F5F9;
     }
-    
     .stat-row:last-child {
         border-bottom: none;
     }
-    
     .stat-name {
         font-size: 1.05rem;
         color: #334155;
         font-weight: 500;
     }
-    
     .stat-count {
         font-size: 1.2rem;
         font-weight: 700;
-        color: #2563EB;
+        color: var(--primary-color);
     }
 
     /* ===== BUTTONS ===== */
@@ -184,38 +143,94 @@ st.markdown("""
         border-radius: 8px;
         height: 3.2rem;
         font-weight: 600;
-        border: 1px solid #E2E8F0;
-        background-color: white;
-        color: #1E293B;
+        font-size: 1rem;
         transition: all 0.2s ease-in-out;
+        border: 1px solid var(--border-color);
+        background-color: white;
+        color: var(--secondary-color);
     }
     
     .stButton > button:hover {
-        border-color: #2563EB;
-        color: #2563EB;
+        border-color: var(--primary-color);
+        color: var(--primary-color);
         background-color: #EFF6FF;
         transform: translateY(-2px);
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    
-    /* Secondary Button (Save Changes) */
+
+    /* Primary Button Override (Submit Button in Form) */
     div[data-testid="stForm"] button[kind="secondary"] {
         background: linear-gradient(135deg, #10B981 0%, #059669 100%);
         color: white;
         border: none;
-        margin-top: 10px;
         box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        margin-top: 10px;
     }
     div[data-testid="stForm"] button[kind="secondary"]:hover {
         box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
         color: white;
     }
-    
-    /* Primary Button */
+
     div[data-testid="stButton"] button[kind="primary"] {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         color: white;
         border: none;
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    }
+    div[data-testid="stButton"] button[kind="primary"]:hover {
+        box-shadow: 0 6px 10px rgba(37, 99, 235, 0.4);
+    }
+
+    /* ===== TABS ===== */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: transparent;
+        border-bottom: 2px solid #E2E8F0;
+        padding-bottom: 0px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        height: 3.5rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border-radius: 8px 8px 0 0;
+        background-color: transparent;
+        color: #64748B;
+        border: none;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: white;
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+    }
+
+    /* ===== DATA EDITOR & TABLES ===== */
+    .stDataFrame {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== LEGEND BOX ===== */
+    .legend-box {
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .legend-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: white;
+        margin-bottom: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     /* ===== UPLOAD AREA ===== */
@@ -226,11 +241,11 @@ st.markdown("""
         padding: 2rem;
     }
     [data-testid="stFileUploader"]:hover {
-        border-color: #2563EB;
+        border-color: var(--primary-color);
         background-color: #EFF6FF;
     }
 
-    /* Hide Branding */
+    /* ===== HIDE STREAMLIT BRANDING ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 </style>
@@ -252,14 +267,14 @@ if 'save_history' not in st.session_state: st.session_state.save_history = []
 if 'tor_raw_text' not in st.session_state: st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state: st.session_state.matched_products = []
 if 'is_excel' not in st.session_state: st.session_state.is_excel = False
-# User edit tracking
+# ✅ User edit tracking
 if 'original_selections' not in st.session_state: st.session_state.original_selections = {}
 if 'user_modified_rows' not in st.session_state: st.session_state.user_modified_rows = set()
 # File Info
 if 'file_name' not in st.session_state: st.session_state.file_name = ""
 if 'file_size' not in st.session_state: st.session_state.file_size = 0
 
-# Initialize API key
+# ✅ Initialize API key from secrets
 if 'gemini_key' not in st.session_state:
     try:
         st.session_state.gemini_key = st.secrets["GEMINI_API_KEY"]
@@ -333,13 +348,14 @@ with st.sidebar:
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
             with st.expander(f"Update #{len(st.session_state.save_history)-idx} - {record['timestamp'].split(' ')[1]}", expanded=False):
+                st.caption(f"Date: {record['timestamp']}")
                 st.write(f"**Saved:** {record['count']} rows")
-                if st.button(f"⏮️ Undo", key=f"undo_{idx}"):
+                if st.button(f"⏮️ Undo this save", key=f"undo_{idx}"):
                     with st.spinner("Reverting..."):
                         try:
                             undo_last_update(record['data'], sheet_url)
                             st.session_state.save_history.pop(-1-idx)
-                            st.success("Reverted!")
+                            st.success("Reverted successfully!")
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
@@ -490,15 +506,27 @@ with tab_verify:
         # Calculate Stats
         total_req = len(df_stats)
         
-        # Manual Check for internal logic because we are about to rename cols in display
-        # Counts
-        cnt_ze = df_stats['Product_Match'].apply(lambda x: 'Zocial Eye' in str(x)).sum()
-        cnt_wr = df_stats['Product_Match'].apply(lambda x: 'Warroom' in str(x)).sum()
-        cnt_out = df_stats['Product_Match'].apply(lambda x: 'Outsource' in str(x)).sum()
-        cnt_oth = df_stats['Product_Match'].apply(lambda x: 'Other Product' in str(x)).sum()
+        # Prepare cols if not exist for counting
+        prod_opts = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
+        impl_opts = ['Standard', 'Customize/Integration', 'Non-Compliant']
         
-        cnt_std = df_stats['Implementation'].apply(lambda x: 'Standard' in str(x)).sum()
-        cnt_cust = df_stats['Implementation'].apply(lambda x: 'Customize' in str(x)).sum()
+        for p in prod_opts:
+            if f"📦 {p}" not in df_stats.columns:
+                df_stats[f"📦 {p}"] = df_stats['Product_Match'].apply(lambda x: p in str(x))
+        for i in impl_opts:
+            if f"🔧 {i}" not in df_stats.columns:
+                df_stats[f"🔧 {i}"] = df_stats['Implementation'].apply(lambda x: i in str(x))
+
+        # Counts
+        cnt_ze = df_stats["📦 Zocial Eye"].sum()
+        cnt_wr = df_stats["📦 Warroom"].sum()
+        cnt_out = df_stats["📦 Outsource"].sum()
+        cnt_oth = df_stats["📦 Other Product"].sum()
+        cnt_nc_prod = df_stats["📦 Non-Compliant"].sum()
+        
+        cnt_std = df_stats["🔧 Standard"].sum()
+        cnt_cust = df_stats["🔧 Customize/Integration"].sum()
+        cnt_nc_impl = df_stats["🔧 Non-Compliant"].sum()
         
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
@@ -554,37 +582,33 @@ with tab_verify:
         st.markdown("### 📋 Detailed Verification")
 
         # --- DATA EDITOR IN FORM ---
+        # ✅ FIX: Using st.form to prevent flickering on every click
         with st.form("editor_form"):
             df = st.session_state.processed_df.copy()
             
-            # 1. Define INTERNAL column names (Prefix to separate groups)
-            # Products
-            p_cols = {
-                'Zocial Eye': 'P_Zocial Eye',
-                'Warroom': 'P_Warroom',
-                'Outsource': 'P_Outsource',
-                'Other Product': 'P_Other Product',
-                'Non-Compliant': 'P_Non-Compliant'
-            }
-            # Implementation
-            i_cols = {
-                'Standard': 'I_Standard',
-                'Customize/Integration': 'I_Customize/Integration',
-                'Non-Compliant': 'I_Non-Compliant'
-            }
+            # Define options & Generate Checkbox Columns
+            product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
+            impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
 
-            # 2. Generate Checkbox Columns with INTERNAL names
-            for name, col_key in p_cols.items():
-                df[col_key] = df['Product_Match'].apply(lambda x: name in str(x))
-            
-            for name, col_key in i_cols.items():
-                df[col_key] = df['Implementation'].apply(lambda x: name in str(x))
+            if 'original_selections' not in st.session_state or len(st.session_state.original_selections) == 0:
+                st.session_state.original_selections = {}
+                for idx in df.index:
+                    st.session_state.original_selections[idx] = {
+                        'products': str(df.loc[idx, 'Product_Match']),
+                        'implementation': str(df.loc[idx, 'Implementation'])
+                    }
+
+            for prod in product_options:
+                df[f"📦 {prod}"] = df['Product_Match'].apply(lambda x: prod in str(x))
+            for impl in impl_options:
+                df[f"🔧 {impl}"] = df['Implementation'].apply(lambda x: impl in str(x))
             
             if '📝 Status' not in df.columns: df['📝 Status'] = '🤖 Auto'
             df['_original_idx'] = df.index
             df.index = range(1, len(df) + 1)
-            
-            # 3. Configure Columns (Display names WITHOUT icons)
+            df.index.name = 'No.'
+
+            # Column Config
             column_config = {
                 "Product_Match": None, "Implementation": None, "_original_idx": None,
                 "TOR_Sentence": st.column_config.TextColumn("Requirement", width="large", disabled=True),
@@ -592,194 +616,267 @@ with tab_verify:
                 "📝 Status": st.column_config.TextColumn("Status", width="small", disabled=True),
                 "Matched_Keyword": st.column_config.TextColumn("Matched Spec", width="medium"),
             }
-            
-            # Map Internal Keys to Clean Display Labels
-            for name, col_key in p_cols.items():
-                label = name if name != 'Non-Compliant' else 'NC (Prod)'
-                column_config[col_key] = st.column_config.CheckboxColumn(label, width="small")
-                
-            for name, col_key in i_cols.items():
-                label = name if name != 'Non-Compliant' else 'NC (Impl)'
-                column_config[col_key] = st.column_config.CheckboxColumn(label, width="small")
+            for prod in product_options: column_config[f"📦 {prod}"] = st.column_config.CheckboxColumn(f"🔵 {prod}", width="small")
+            for impl in impl_options: column_config[f"🔧 {impl}"] = st.column_config.CheckboxColumn(f"🟠 {impl}", width="small")
 
-            # 4. Legend (Simplified)
+            # LEGEND
             st.markdown("""
             <div class="legend-box">
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:15px; height:15px; background-color:#EFF6FF; border:2px solid #2563EB; border-radius:4px;"></div>
-                        <span style="font-weight:600; color:#334155;">Product (Multi-Select)</span>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">Selected Product</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            • Can select multiple options<br>• Choose all that apply
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:15px; height:15px; background-color:#FFF7ED; border:2px solid #F97316; border-radius:4px;"></div>
-                        <span style="font-weight:600; color:#334155;">Implementation (Single Select)</span>
+                    <div style="flex: 1; min-width: 250px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            • ⚠️ Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:15px; height:15px; background-color:#FEF2F2; border:2px solid #EF4444; border-radius:4px;"></div>
-                        <span style="font-weight:600; color:#334155;">Non-Compliant</span>
+                    <div style="flex: 1; min-width: 200px;">
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #64748B, #94A3B8);">Status</span>
+                        <div style="font-size:0.85rem; color:#475569;">
+                            🤖 Auto = System generated<br>✅ Edited = Manually changed
+                        </div>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            # 5. Render
-            ordered_cols = ["TOR_Sentence", "Requirement_Type"] + list(p_cols.values()) + list(i_cols.values()) + ["📝 Status", "Matched_Keyword"]
-            
+            # RENDER EDITOR
             edited_df_input = st.data_editor(
                 df,
                 column_config=column_config,
-                column_order=ordered_cols,
-                hide_index=False, use_container_width=True, num_rows="dynamic", height=600, key="data_editor_form"
+                column_order=[
+                    "TOR_Sentence", "Requirement_Type",
+                    "📦 Zocial Eye", "📦 Warroom", "📦 Outsource", "📦 Other Product", "📦 Non-Compliant",
+                    "🔧 Standard", "🔧 Customize/Integration", "🔧 Non-Compliant",
+                    "📝 Status", "Matched_Keyword"
+                ],
+                hide_index=False, use_container_width=True, num_rows="dynamic", height=500, key="data_editor_form"
             )
             
-            submit_changes = st.form_submit_button("💾 Save Changes & Apply Logic", type="secondary")
+            submit_changes = st.form_submit_button("💾 Save Changes (Apply Logic)")
 
         # --- LOGIC ENFORCEMENT ON SUBMIT ---
         if submit_changes:
-            working_df = edited_df_input.copy()
+            st.session_state.edited_df = edited_df_input # Capture state
             
-            # Helper to reconstruct list from checked columns
-            def get_checked_items(row, col_map):
-                return [name for name, col_key in col_map.items() if row.get(col_key, False)]
+            def normalize_selection(val_str):
+                if not val_str or pd.isna(val_str) or val_str == 'nan': return []
+                clean = str(val_str).replace("[","").replace("]","").replace("'","")
+                return sorted([x.strip() for x in clean.split(',') if x.strip() and x.strip() != 'nan'])
+
+            impl_cols = [f"🔧 {i}" for i in impl_options]
+            
+            # Use local variable for processing
+            working_df = edited_df_input.copy()
 
             for i in working_df.index:
                 orig_idx = working_df.loc[i, '_original_idx']
                 
-                # A. Single Select Logic for Implementation
-                checked_impls = get_checked_items(working_df.loc[i], i_cols)
+                # 1. Single Select Logic (Implementation)
+                checked_impls = [col for col in impl_cols if working_df.loc[i, col]]
+                if len(checked_impls) > 1:
+                    # If multiple checked, keep only the Non-Compliant if present, else keep the first one/Standard/Customize logic
+                    # Simple rule: If Non-Compliant is checked, uncheck others. Else, uncheck Standard if Customize is checked (prioritize specific)
+                    if working_df.loc[i, '🔧 Non-Compliant']:
+                         working_df.loc[i, '🔧 Standard'] = False
+                         working_df.loc[i, '🔧 Customize/Integration'] = False
+                    elif working_df.loc[i, '🔧 Customize/Integration'] and working_df.loc[i, '🔧 Standard']:
+                         working_df.loc[i, '🔧 Standard'] = False
                 
-                # Logic: If NC(Impl) is checked, uncheck others. Else if Custom/Standard, enforce single.
-                if 'Non-Compliant' in checked_impls:
-                    for name in checked_impls:
-                        if name != 'Non-Compliant': working_df.loc[i, i_cols[name]] = False
-                elif len(checked_impls) > 1:
-                    # Priority rule: If customize is checked, keep it (assume user wants to override standard)
-                    if 'Customize/Integration' in checked_impls:
-                        working_df.loc[i, i_cols['Standard']] = False
-                
-                # B. Non-Compliant Logic for Product
-                if working_df.loc[i, p_cols['Non-Compliant']]:
-                    # Clear other products
-                    for name, col_key in p_cols.items():
-                        if name != 'Non-Compliant': working_df.loc[i, col_key] = False
+                # 2. Non-Compliant Logic (Product)
+                if working_df.loc[i, '📦 Non-Compliant']:
+                    prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
+                    for c in prod_cols_to_clear: 
+                        working_df.loc[i, c] = False
                     
-                    # Force Implementation to NC
-                    working_df.loc[i, i_cols['Non-Compliant']] = True
-                    working_df.loc[i, i_cols['Standard']] = False
-                    working_df.loc[i, i_cols['Customize/Integration']] = False
+                    # Auto force Implementation to Non-Compliant
+                    working_df.loc[i, '🔧 Non-Compliant'] = True
+                    working_df.loc[i, '🔧 Standard'] = False
+                    working_df.loc[i, '🔧 Customize/Integration'] = False
 
-                # C. Reconstruct Strings for Backend
-                curr_prods = get_checked_items(working_df.loc[i], p_cols)
-                curr_impls = get_checked_items(working_df.loc[i], i_cols) # Re-get after logic
-                
+                # 3. Construct Strings & Status Update
+                curr_prods = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
+                curr_impls = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
                 curr_prod_str = ", ".join(curr_prods)
                 curr_impl_str = ", ".join(curr_impls)
                 
-                # D. Check Change
                 orig_data = st.session_state.original_selections.get(orig_idx, {})
-                def clean_set(s): 
-                    return set([x.strip() for x in str(s).replace('[','').replace(']','').replace("'",'').split(',') if x.strip() and x.strip() != 'nan'])
                 
-                is_changed = (clean_set(curr_prod_str) != clean_set(orig_data.get('products'))) or \
-                             (clean_set(curr_impl_str) != clean_set(orig_data.get('implementation')))
+                is_changed = (normalize_selection(curr_prod_str) != normalize_selection(orig_data.get('products'))) or \
+                             (normalize_selection(curr_impl_str) != normalize_selection(orig_data.get('implementation')))
                 
                 new_status = '✅ Edited' if is_changed else '🤖 Auto'
                 working_df.loc[i, '📝 Status'] = new_status
                 
-                # Update Main State
+                # Update Main Dataframe
                 st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str
                 st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str
                 st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = working_df.loc[i, 'Requirement_Type']
                 st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
 
+            # Save formatted df to display again
             st.session_state.edited_df = working_df
-            st.success("✅ Changes Saved!"); time.sleep(0.5); st.rerun()
+            st.success("✅ Changes Saved & Logic Applied!")
+            time.sleep(0.5)
+            st.rerun()
 
-        # --- EXPORT ---
+        # --- FOOTER ACTIONS ---
         st.markdown("### 💾 Export & Save")
+        
+        # Prepare Data (using edited_df if available)
         final_df = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
         
-        # Prepare for Save (Filter NC)
-        valid_rows = final_df[~final_df['Product_Match'].str.contains('Non-Compliant', na=False)].copy()
+        # Helper to regenerate formatted df from processed_df if needed for saving
+        # But we already have logic to sync processed_df on submit
         
-        def split_lang(row):
-            txt = str(row['TOR_Sentence'])
-            return pd.Series([txt, ""]) if re.search(r'[\u0E00-\u0E7F]', txt) else pd.Series(["", txt])
+        # Filter Non-Compliant for Sheet
+        raw_save_data = prepare_save_data(final_df, product_options, impl_options) # Use helper
+        valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
-        if not valid_rows.empty:
-            valid_rows[['Sentence_TH', 'Sentence_ENG']] = valid_rows.apply(split_lang, axis=1)
-            save_data = valid_rows[['Product_Match', 'Sentence_TH', 'Sentence_ENG', 'Implementation']].rename(columns={'Product_Match':'Product'})
-        else: 
-            save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
+        def split_languages(row):
+            text = str(row['TOR_Sentence'])
+            if re.search(r'[\u0E00-\u0E7F]', text): return pd.Series([text, ""]) 
+            else: return pd.Series(["", text])
+        
+        if not valid_data.empty:
+            valid_data[['Sentence_TH', 'Sentence_ENG']] = valid_data.apply(split_languages, axis=1)
+            final_save_data = valid_data[['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation']]
+        else:
+            final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            if st.button("💾 Save to Google Sheet", type="primary", disabled=len(save_data)==0):
-                with st.spinner("Saving..."):
+            if st.button("💾 Save to Google Sheet", type="primary", disabled=len(final_save_data)==0):
+                with st.spinner("Saving to Google Sheet..."):
                     try:
-                        save_to_product_spec(save_data, sheet_url)
-                        st.session_state.save_history.append({'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'count': len(save_data), 'data': save_data.to_dict('records')})
-                        st.success("✅ Saved!"); time.sleep(1.5); st.rerun()
-                    except Exception as e: st.error(f"Failed: {e}")
+                        save_to_product_spec(final_save_data, sheet_url)
+                        st.session_state.save_history.append({
+                            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'count': len(final_save_data), 'products': list(final_save_data['Product'].unique()),
+                            'data': final_save_data.to_dict('records')
+                        })
+                        st.success("✅ Saved successfully!"); st.balloons()
+                        time.sleep(1.5)
+                        st.rerun()
+                    except Exception as e: st.error(f"❌ Failed: {e}")
+
         with c2:
-            out = BytesIO()
-            with pd.ExcelWriter(out, engine='xlsxwriter') as writer:
-                exp = final_df[['TOR_Sentence', 'Product_Match', 'Implementation', 'Requirement_Type']].rename(columns={'TOR_Sentence':'Requirement', 'Product_Match':'Selected product', 'Requirement_Type':'Requirement type'})
-                exp.to_excel(writer, sheet_name='Data', index=False)
-            fname = f"{st.session_state.file_name.rsplit('.', 1)[0]}_compliant.xlsx" if st.session_state.file_name else "export.xlsx"
-            st.download_button("⬇️ Download Excel", data=out.getvalue(), file_name=fname, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                export_df = st.session_state.processed_df.copy()
+                cols_to_keep = ['TOR_Sentence', 'Product_Match', 'Implementation', 'Requirement_Type']
+                available_cols = [c for c in cols_to_keep if c in export_df.columns]
+                export_df = export_df[available_cols]
+                export_df = export_df.rename(columns={'TOR_Sentence': 'Requirement', 'Product_Match': 'Selected product', 'Requirement_Type': 'Requirement type'})
+                export_df.to_excel(writer, sheet_name='Data', index=False)
+            
+            original_name = st.session_state.file_name
+            download_name = f"{original_name.rsplit('.', 1)[0]}_compliant.xlsx" if original_name else "compliant_export.xlsx"
+            st.download_button("⬇️ Download Excel", data=output.getvalue(), file_name=download_name, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
         with c3:
-            if st.button("🔄 Reset Analysis"): st.session_state.clear(); st.rerun()
+             if st.button("🔄 Reset Analysis"):
+                st.session_state.clear(); st.rerun()
 
 # ==========================================
 # TAB 2: BUDGET
 # ==========================================
 with tab_budget:
     st.markdown("### 💰 Budget Estimation")
-    if not st.session_state.analysis_done: 
-        st.warning("⚠️ Please complete verification first.")
+    
+    if not st.session_state.analysis_done:
+        st.warning("⚠️ Please complete the 'Results & Verify' step first.")
     else:
         if not st.session_state.budget_calculated:
-            if st.button("Generate Budget", type="primary"):
-                with st.spinner("Calculating..."):
+            if st.button("Generate Initial Budget", type="primary"):
+                with st.spinner("🤖 AI Calculating..."):
                     try:
-                        st.session_state.budget_factors = extract_budget_factors(st.session_state.tor_raw_text, st.session_state.gemini_key)
-                        st.session_state.budget_calculated = True; st.rerun()
-                    except: st.error("Failed")
+                        factors = extract_budget_factors(st.session_state.tor_raw_text, st.session_state.gemini_key)
+                        st.session_state.budget_factors = factors
+                        st.session_state.budget_calculated = True
+                        st.rerun()
+                    except Exception as e: st.error(f"❌ Failed: {e}")
         
         if st.session_state.budget_calculated:
-            res = calculate_budget_sheets(st.session_state.budget_factors, st.session_state.matched_products, st.session_state.pricing_df, st.session_state.addon_df)
+            results = calculate_budget_sheets(
+                st.session_state.budget_factors, st.session_state.matched_products,
+                st.session_state.pricing_df, st.session_state.addon_df
+            )
+            
             st.markdown("#### 🧾 Cost Breakdown")
-            total = 0
-            for r in res:
-                with st.expander(f"📦 {r['Product']}", expanded=True):
-                    st.markdown("\n".join([l.lstrip() for l in format_budget_report(r['Product'], r['Package'], st.session_state.budget_factors, r['Breakdown']).split('\n')]), unsafe_allow_html=True)
-                total += r['Breakdown']['total'] + (r['Package'].get('Initial_Fee (THB)', 0) if isinstance(r['Package'].get('Initial_Fee (THB)'), (int, float)) else 0)
             
-            md_cost = st.session_state.budget_factors.get('mandays', 0) * 22000
-            oth_cost = st.session_state.budget_factors.get('other_expenses', 0.0)
-            
-            if md_cost: st.markdown(f"<div style='background:#EFF6FF; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #BFDBFE;'><h4 style='color:#1E40AF; margin:0;'>🛠️ Customization</h4><p style='margin:5px 0 0 0;'>{st.session_state.budget_factors.get('mandays')} Mandays × 22,000 = <strong>{md_cost:,.0f} THB</strong></p></div>", unsafe_allow_html=True)
-            if oth_cost: st.markdown(f"<div style='background:#FFF7ED; padding:15px; border-radius:8px; margin-top:15px; border:1px solid #FED7AA;'><h4 style='color:#C2410C; margin:0;'>💸 Other</h4><p style='margin:5px 0 0 0;'><strong>{oth_cost:,.0f} THB</strong></p></div>", unsafe_allow_html=True)
-            
-            st.markdown(f"<div style='background:#DCFCE7; padding:25px; border-radius:12px; border-left:6px solid #10B981; text-align:right; margin-top:25px;'><h4 style='color:#065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color:#047857; margin:0; font-size:1.8rem;'>{total + md_cost + oth_cost:,.2f} THB/Year</h1></div>", unsafe_allow_html=True)
-            
-            st.markdown("---"); st.markdown("#### ✏️ Adjust Factors")
-            f = st.session_state.budget_factors
-            c1, c2 = st.columns(2)
-            with c1: st.markdown("##### 🔹 Zocial Eye"); zu = st.number_input("Users", value=f.get('num_users', 2)); zd = st.number_input("Days", value=f.get('data_backward_days', 90))
-            with c2: st.markdown("##### 🔸 Warroom"); wu = st.number_input("Users", value=f.get('num_users', 5), key='wu'); wt = st.number_input("Tx", value=f.get('monthly_transactions', 35000))
-            c3, c4 = st.columns(2)
-            with c3: wc = st.number_input("Channels", value=f.get('social_channels_count', 0)); wb = st.checkbox("Chatbot", value=f.get('chatbot_required', False))
-            st.markdown("<hr style='margin:1.5rem 0; border-top:1px solid #E2E8F0;'>", unsafe_allow_html=True)
-            st.markdown("##### ➕ Additional")
-            c5, c6 = st.columns(2)
-            with c5: md = st.number_input("Mandays", value=f.get('mandays', 0))
-            with c6: ot = st.number_input("Other (THB)", value=float(f.get('other_expenses', 0.0)))
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🔄 Recalculate"):
-                st.session_state.budget_factors.update({'num_users': zu, 'data_backward_days': zd, 'monthly_transactions': wt, 'social_channels_count': wc, 'chatbot_required': wb, 'mandays': md, 'other_expenses': ot})
-                st.rerun()
+            total_budget = 0
+            if results:
+                for res in results:
+                    with st.expander(f"📦 {res['Product']}", expanded=True):
+                         raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
+                         clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
+                         st.markdown(clean_html, unsafe_allow_html=True)
+                    
+                    init_fee = res['Package'].get('Initial_Fee (THB)', 0)
+                    if init_fee and isinstance(init_fee, (int, float)): total_budget += res['Breakdown']['total'] + init_fee
+                    else: total_budget += res['Breakdown']['total']
+                
+                mandays = st.session_state.budget_factors.get('mandays', 0)
+                manday_cost = mandays * 22000
+                other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
+                grand_total = total_budget + manday_cost + other_expenses
+                
+                if mandays != 0:
+                    st.markdown(f"""<div style='background-color: #EFF6FF; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #BFDBFE;'><h4 style='color: #1E40AF; margin:0;'>🛠️ Customization Service</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'>{mandays} Mandays × 22,000 THB = <strong>{manday_cost:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
+                
+                if other_expenses != 0:
+                    st.markdown(f"""<div style='background-color: #FFF7ED; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #FED7AA;'><h4 style='color: #C2410C; margin:0;'>💸 Other Expenses</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'><strong>{other_expenses:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
 
-st.markdown("---"); st.caption(f"WiseTOR Sense v2.5.2 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+                st.markdown(f"""<div style='background-color: #DCFCE7; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; text-align: right; margin-top:25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'><h4 style='color: #065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color: #047857; margin:0; font-size: 1.8rem;'>{grand_total:,.2f} THB/Year</h1></div>""", unsafe_allow_html=True)
+            else:
+                st.warning("⚠️ No suitable package found.")
+            
+            st.markdown("---")
+            st.markdown("#### ✏️ Adjust Budget Factors")
+            
+            with st.container():
+                factors = st.session_state.budget_factors
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.markdown("##### 🔹 Zocial Eye Configuration")
+                    ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
+                    ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
+                
+                with c2:
+                    st.markdown("##### 🔸 Warroom Configuration")
+                    wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
+                    wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
+                    
+                c3, c4 = st.columns(2)
+                with c3:
+                    wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0))
+                    wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
+                
+                st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+                
+                st.markdown("##### ➕ Additional Costs")
+                c5, c6 = st.columns(2)
+                with c5:
+                    md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1)
+                with c6:
+                    other_cost_input = st.number_input("Other Expenses (THB)", value=float(factors.get('other_expenses', 0.0)), step=1000.0)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🔄 Recalculate Budget", type="primary"):
+                    st.session_state.budget_factors.update({
+                        'num_users': ze_users, 'data_backward_days': ze_days,
+                        'monthly_transactions': wr_tx, 'social_channels_count': wr_ch,
+                        'chatbot_required': wr_bot, 'mandays': md_input, 'other_expenses': other_cost_input
+                    })
+                    st.rerun()
+
+# ===== FOOTER =====
+st.markdown("---")
+st.caption(f"WiseTOR Sense v2.5.0 | Session: {datetime.now().strftime('%Y-%m-%d')}")
