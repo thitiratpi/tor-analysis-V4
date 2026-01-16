@@ -109,7 +109,7 @@ st.markdown("""
     }
     
     .stat-value-big {
-        font-size: 2.5rem;
+        font-size: 2.0rem;
         font-weight: 800;
         color: var(--primary-color);
         line-height: 1;
