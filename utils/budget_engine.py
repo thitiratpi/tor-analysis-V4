@@ -193,42 +193,43 @@ def format_budget_report(product, package_row, factors, breakdown):
         except: 
             return "-"
     
-    # --- แก้ไข: ลบ Indentation (เว้นวรรคหน้าบรรทัด) ออกให้หมด ---
+    # HTML Construction
+    # Note: Indentation here is for Python readability, but we will strip it before returning.
     html = f"""
-<div style="border: 2px solid #1f77b4; border-radius: 10px; padding: 20px; margin: 20px 0; background-color: #f8f9fa;">
-<h2 style="color: #1f77b4; margin-top: 0;">📦 {product}</h2>
-<h4 style="color: #666;">Package: {package_row.get('Package', 'Custom')}</h4>
-<hr style="border: 1px solid #ddd;">
-
-<h3 style="color: #ff7f0e;">📝 Factor Checklist</h3>
-<ul style="list-style-type: none; padding-left: 0;">
-"""
+    <div style="border: 2px solid #1f77b4; border-radius: 10px; padding: 20px; margin: 20px 0; background-color: #f8f9fa;">
+        <h2 style="color: #1f77b4; margin-top: 0;">📦 {product}</h2>
+        <h4 style="color: #666;">Package: {package_row.get('Package', 'Custom')}</h4>
+        <hr style="border: 1px solid #ddd;">
+        
+        <h3 style="color: #ff7f0e;">📝 Factor Checklist</h3>
+        <ul style="list-style-type: none; padding-left: 0;">
+    """
     
     # Factors
     if product == 'Zocial Eye':
         users = factors.get('num_users')
         bw = factors.get('data_backward_days')
         html += f"""
-<li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
-<li>{'✅' if bw else '❌'} <b>Data Backward:</b> {bw if bw else 'Not found (Using Default)'} Days</li>
-"""
+            <li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
+            <li>{'✅' if bw else '❌'} <b>Data Backward:</b> {bw if bw else 'Not found (Using Default)'} Days</li>
+        """
     elif product == 'Warroom':
         users = factors.get('num_users')
         tx = factors.get('monthly_transactions')
         chatbot = factors.get('chatbot_required')
         html += f"""
-<li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
-<li>{'✅' if tx else '❌'} <b>Monthly Transactions:</b> {tx if tx else 'Not found (Using Default)'} Msgs</li>
-<li>✅ <b>Chatbot Required:</b> {'Yes' if chatbot else 'No (Assumed)'}</li>
-"""
+            <li>{'✅' if users else '❌'} <b>Number of Users:</b> {users if users else 'Not found (Using Default)'}</li>
+            <li>{'✅' if tx else '❌'} <b>Monthly Transactions:</b> {tx if tx else 'Not found (Using Default)'} Msgs</li>
+            <li>✅ <b>Chatbot Required:</b> {'Yes' if chatbot else 'No (Assumed)'}</li>
+        """
     
     html += """
-</ul>
-<hr style="border: 1px solid #ddd;">
-
-<h3 style="color: #ff7f0e;">📋 Package Details</h3>
-<ul>
-"""
+        </ul>
+        <hr style="border: 1px solid #ddd;">
+        
+        <h3 style="color: #ff7f0e;">📋 Package Details</h3>
+        <ul>
+    """
     
     # Package details
     init_fee = package_row.get('Initial_Fee (THB)', 0)
@@ -236,20 +237,20 @@ def format_budget_report(product, package_row, factors, breakdown):
     
     if product == 'Zocial Eye':
         html += f"""
-<li><b>Message limit per contract:</b> {format_money(package_row.get('Message_Limit_PerContract (Messages)'))} messages</li>
-<li><b>Campaign limit:</b> {get_val('Campaign_Limit', 'Campaigns')}</li>
-<li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
-<li><b>Data backward:</b> {format_days(package_row.get('Data_Backward (Days)'))}</li>
-<li><b>Insight prompts:</b> {get_val('Insight_Prompts')}</li>
-"""
+            <li><b>Message limit per contract:</b> {format_money(package_row.get('Message_Limit_PerContract (Messages)'))} messages</li>
+            <li><b>Campaign limit:</b> {get_val('Campaign_Limit', 'Campaigns')}</li>
+            <li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
+            <li><b>Data backward:</b> {format_days(package_row.get('Data_Backward (Days)'))}</li>
+            <li><b>Insight prompts:</b> {get_val('Insight_Prompts')}</li>
+        """
     elif product == 'Warroom':
         tx_limit = package_row.get('Transaction_Limit_PerMonth (Messages)') or package_row.get('Message_Limit_PerMonth (Messages)')
         html += f"""
-<li><b>Message/Transaction limit:</b> {format_money(tx_limit) if tx_limit else 'Unlimited'}</li>
-<li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
-<li><b>Owned social channel:</b> {get_val('Owned_Social_Channel (Account)', 'channels')}</li>
-<li><b>Chat history:</b> {get_val('Chat_History')}</li>
-"""
+            <li><b>Message/Transaction limit:</b> {format_money(tx_limit) if tx_limit else 'Unlimited'}</li>
+            <li><b>User limit:</b> {get_val('User_Limit (User)', 'users')}</li>
+            <li><b>Owned social channel:</b> {get_val('Owned_Social_Channel (Account)', 'channels')}</li>
+            <li><b>Chat history:</b> {get_val('Chat_History')}</li>
+        """
     
     html += f"<li><b>Annual Base Price:</b> {format_money(package_row.get('Total_Price_Per_Year (THB)'))} THB</li>"
     html += "</ul>"
@@ -257,10 +258,10 @@ def format_budget_report(product, package_row, factors, breakdown):
     # Add-ons
     if breakdown['addon_cost'] > 0:
         html += """
-<hr style="border: 1px solid #ddd;">
-<h3 style="color: #ff7f0e;">🔧 Add-ons</h3>
-<ul>
-"""
+            <hr style="border: 1px solid #ddd;">
+            <h3 style="color: #ff7f0e;">🔧 Add-ons</h3>
+            <ul>
+        """
         for detail in breakdown['details']:
             html += f"<li>{detail}</li>"
         html += f"<li><b>Total Add-ons Cost:</b> {format_money(breakdown['addon_cost'])} THB/Year</li>"
@@ -272,9 +273,13 @@ def format_budget_report(product, package_row, factors, breakdown):
         grand_total += init_fee
     
     html += f"""
-<hr style="border: 2px solid #1f77b4;">
-<h2 style="color: #28a745; text-align: center;">💰 TOTAL ANNUAL PRICE: {format_money(grand_total)} THB/Year</h2>
-</div>
-"""
+        <hr style="border: 2px solid #1f77b4;">
+        <h2 style="color: #28a745; text-align: center;">💰 TOTAL ANNUAL PRICE: {format_money(grand_total)} THB/Year</h2>
+    </div>
+    """
     
-    return html
+    # ✅ FIX: FORCE CLEANUP WHITESPACE BEFORE RETURNING
+    # This prevents Streamlit from interpreting indented HTML as Code Blocks
+    clean_html = "\n".join([line.lstrip() for line in html.split('\n')])
+    
+    return clean_html
