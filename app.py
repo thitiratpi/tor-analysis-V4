@@ -31,88 +31,173 @@ st.set_page_config(
 )
 
 # ==========================================
-# CUSTOM CSS (PROFESSIONAL THEME)
+# ENHANCED CUSTOM CSS (PROFESSIONAL THEME)
 # ==========================================
 st.markdown("""
 <style>
-    /* ===== THEME VARIABLES ===== */
+    /* ===== IMPORT GOOGLE FONTS ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* ===== THEME VARIABLES (Enhanced Modern Palette) ===== */
     :root {
-        --primary-color: #2563EB; /* Royal Blue */
-        --secondary-color: #1E293B; /* Slate Dark */
-        --bg-light: #F8FAFC;
-        --border-color: #E2E8F0;
-        --success-color: #10B981;
-        --warning-color: #F59E0B;
-        --danger-color: #EF4444;
-        --text-color: #334155;
+        --primary-blue: #3B82F6;
+        --primary-blue-dark: #2563EB;
+        --primary-blue-light: #60A5FA;
+        --accent-indigo: #6366F1;
+        --accent-purple: #8B5CF6;
+        
+        --success-green: #10B981;
+        --success-green-dark: #059669;
+        --warning-amber: #F59E0B;
+        --warning-amber-dark: #D97706;
+        --danger-red: #EF4444;
+        --danger-red-dark: #DC2626;
+        
+        --neutral-50: #F8FAFC;
+        --neutral-100: #F1F5F9;
+        --neutral-200: #E2E8F0;
+        --neutral-300: #CBD5E1;
+        --neutral-400: #94A3B8;
+        --neutral-500: #64748B;
+        --neutral-600: #475569;
+        --neutral-700: #334155;
+        --neutral-800: #1E293B;
+        --neutral-900: #0F172A;
+        
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
     /* ===== GLOBAL TYPOGRAPHY ===== */
     .stApp {
-        background-color: white;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        color: var(--text-color);
+        background: linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: var(--neutral-700);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     
-    h1, h2, h3, h4, h5 {
-        color: var(--secondary-color) !important;
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--neutral-900) !important;
         font-weight: 700 !important;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
     }
     
+    /* Main Header with Gradient Text */
     .main-header {
-        font-size: 2.2rem;
+        font-size: 3rem;
         text-align: center;
         margin-bottom: 0.5rem;
-        background: -webkit-linear-gradient(45deg, #1E3A8A, #3B82F6);
+        background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--accent-indigo) 50%, var(--accent-purple) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-weight: 800;
+        background-clip: text;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        text-shadow: 0 2px 10px rgba(59, 130, 246, 0.1);
+        animation: fadeInDown 0.6s ease-out;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    /* ===== CARDS & CONTAINERS ===== */
+    /* ===== CARDS & CONTAINERS (Elevated Design) ===== */
     .custom-card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 16px;
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 1rem;
-        transition: transform 0.2s;
-        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--neutral-200);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .custom-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
     .custom-card:hover {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--neutral-300);
+    }
+    
+    .custom-card:hover::before {
+        opacity: 1;
     }
 
     .file-info-card {
-        background-color: #F8FAFC;
-        padding: 1.25rem;
-        border-radius: 12px;
-        border: 1px solid #E2E8F0;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+        padding: 1.75rem;
+        border-radius: 16px;
+        border: 2px solid var(--neutral-200);
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .file-info-card:hover {
+        border-color: var(--primary-blue-light);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
     }
 
-    /* ===== STATISTICS DASHBOARD (REFINED) ===== */
+    /* ===== STATISTICS DASHBOARD (Modern Glass Effect) ===== */
     .stat-label {
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #64748B;
+        letter-spacing: 0.1em;
+        color: var(--neutral-500);
         font-weight: 700;
-        margin-bottom: 1.5rem;
-        text-align: center; /* CENTER ALIGNMENT */
+        margin-bottom: 1rem;
+        text-align: center;
+        position: relative;
+        padding-bottom: 0.75rem;
+    }
+    
+    .stat-label::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        border-radius: 2px;
     }
     
     .stat-value-big {
-        font-size: 2.0rem;
-        font-weight: 800;
-        color: var(--primary-color);
+        font-size: 3rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         line-height: 1;
+        letter-spacing: -0.02em;
     }
 
     /* Professional List Row Style */
@@ -120,134 +205,312 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 10px;
-        border-bottom: 1px solid #F1F5F9;
+        padding: 16px 16px;
+        border-bottom: 1px solid var(--neutral-100);
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        margin-bottom: 4px;
     }
+    
+    .stat-row:hover {
+        background-color: var(--neutral-50);
+        padding-left: 20px;
+    }
+    
     .stat-row:last-child {
         border-bottom: none;
     }
+    
     .stat-name {
-        font-size: 1.05rem;
-        color: #334155;
+        font-size: 1rem;
+        color: var(--neutral-700);
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
+    
+    .stat-name::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+    }
+    
     .stat-count {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--primary-color);
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-family: 'JetBrains Mono', monospace;
     }
 
-    /* ===== BUTTONS ===== */
+    /* ===== BUTTONS (Enhanced with Gradients) ===== */
     .stButton > button {
         width: 100%;
-        border-radius: 8px;
-        height: 3.2rem;
+        border-radius: 12px;
+        height: 3.5rem;
         font-weight: 600;
         font-size: 1rem;
-        transition: all 0.2s ease-in-out;
-        border: 1px solid var(--border-color);
-        background-color: white;
-        color: var(--secondary-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid var(--neutral-200);
+        background: white;
+        color: var(--neutral-700);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .stButton > button:hover::before {
+        left: 100%;
     }
     
     .stButton > button:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background-color: #EFF6FF;
+        border-color: var(--primary-blue);
+        color: var(--primary-blue);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: var(--shadow-lg);
     }
 
-    /* Primary Button Override (Submit Button in Form) */
+    /* Primary Button Override */
     div[data-testid="stForm"] button[kind="secondary"] {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        background: linear-gradient(135deg, var(--success-green) 0%, var(--success-green-dark) 100%);
         color: white;
         border: none;
-        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         margin-top: 10px;
+        font-weight: 700;
     }
+    
     div[data-testid="stForm"] button[kind="secondary"]:hover {
-        box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
-        color: white;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
     }
 
     div[data-testid="stButton"] button[kind="primary"] {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
         color: white;
         border: none;
-        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        font-weight: 700;
     }
+    
     div[data-testid="stButton"] button[kind="primary"]:hover {
-        box-shadow: 0 6px 10px rgba(37, 99, 235, 0.4);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
     }
 
-    /* ===== TABS ===== */
+    /* ===== TABS (Modern Pill Design) ===== */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: transparent;
-        border-bottom: 2px solid #E2E8F0;
-        padding-bottom: 0px;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 8px;
+        border: 1px solid var(--neutral-200);
+        box-shadow: var(--shadow-sm);
     }
     
     .stTabs [data-baseweb="tab"] {
         height: 3.5rem;
         font-weight: 600;
-        font-size: 1.1rem;
-        border-radius: 8px 8px 0 0;
+        font-size: 1.05rem;
+        border-radius: 12px;
         background-color: transparent;
-        color: #64748B;
+        color: var(--neutral-600);
         border: none;
+        padding: 0 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: var(--neutral-100);
+        color: var(--neutral-900);
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: white;
-        color: var(--primary-color);
-        border-bottom: 3px solid var(--primary-color);
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        color: white !important;
+        box-shadow: var(--shadow-md);
+        border: none;
     }
 
     /* ===== DATA EDITOR & TABLES ===== */
     .stDataFrame {
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
+        border: 2px solid var(--neutral-200);
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stDataFrame thead tr th {
+        background: linear-gradient(135deg, var(--neutral-50) 0%, var(--neutral-100) 100%) !important;
+        color: var(--neutral-900) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        padding: 1rem !important;
     }
 
-    /* ===== LEGEND BOX ===== */
+    /* ===== LEGEND BOX (Enhanced Glassmorphism) ===== */
     .legend-box {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        border: 2px solid var(--neutral-200);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-lg);
     }
     
     .legend-badge {
         display: inline-block;
-        padding: 6px 12px;
-        border-radius: 6px;
+        padding: 10px 20px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: white;
-        margin-bottom: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 12px;
+        box-shadow: var(--shadow-md);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.3s ease;
+    }
+    
+    .legend-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
     }
 
-    /* ===== UPLOAD AREA ===== */
+    /* ===== UPLOAD AREA (Modern Drag-Drop Design) ===== */
     [data-testid="stFileUploader"] {
-        background-color: #F8FAFC;
-        border: 2px dashed #CBD5E1;
-        border-radius: 12px;
-        padding: 2rem;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 3px dashed var(--neutral-300);
+        border-radius: 20px;
+        padding: 3rem;
+        transition: all 0.3s ease;
     }
+    
     [data-testid="stFileUploader"]:hover {
-        border-color: var(--primary-color);
-        background-color: #EFF6FF;
+        border-color: var(--primary-blue);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* ===== SIDEBAR STYLING ===== */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+        backdrop-filter: blur(20px);
+        border-right: 2px solid var(--neutral-200);
+    }
+    
+    [data-testid="stSidebar"] .css-1d391kg {
+        padding-top: 2rem;
+    }
+
+    /* ===== INPUT FIELDS ===== */
+    .stTextInput > div > div > input,
+    .stNumberInput > div > div > input {
+        border-radius: 12px;
+        border: 2px solid var(--neutral-200);
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stNumberInput > div > div > input:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* ===== EXPANDER ===== */
+    .streamlit-expanderHeader {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 2px solid var(--neutral-200);
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        border-color: var(--primary-blue);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    }
+
+    /* ===== SUCCESS/WARNING/ERROR ALERTS ===== */
+    .stSuccess {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+        border-left: 4px solid var(--success-green);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .stWarning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+        border-left: 4px solid var(--warning-amber);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .stError {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+        border-left: 4px solid var(--danger-red);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    /* ===== SPINNER ===== */
+    .stSpinner > div {
+        border-top-color: var(--primary-blue) !important;
     }
 
     /* ===== HIDE STREAMLIT BRANDING ===== */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
+    /* ===== SCROLLBAR STYLING ===== */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--neutral-100);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-indigo) 100%);
+        border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--accent-purple) 100%);
+    }
+    
+    /* ===== CAPTION STYLING ===== */
+    .stCaption {
+        color: var(--neutral-500);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -295,17 +558,21 @@ with st.sidebar:
             st.session_state.gemini_key = st.secrets["GEMINI_API_KEY"]
         
         st.markdown("""
-        <div style='background-color: #DCFCE7; padding: 12px; border-radius: 8px; border-left: 4px solid #10B981; margin-bottom: 1rem;'>
-            <p style='margin: 0; color: #065F46; font-weight: 600; font-size: 0.9rem;'>
+        <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%); 
+                    padding: 16px; border-radius: 12px; border-left: 4px solid #10B981; margin-bottom: 1.5rem;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+            <p style='margin: 0; color: #065F46; font-weight: 700; font-size: 0.95rem;'>
                 ✅ Gemini AI: Connected
             </p>
         </div>
         """, unsafe_allow_html=True)
-        st.caption("via Streamlit Secrets")
+        st.caption("🔒 Secured via Streamlit Secrets")
     except Exception as e:
         st.markdown("""
-        <div style='background-color: #FEE2E2; padding: 12px; border-radius: 8px; border-left: 4px solid #EF4444; margin-bottom: 1rem;'>
-            <p style='margin: 0; color: #991B1B; font-weight: 600; font-size: 0.9rem;'>
+        <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%); 
+                    padding: 16px; border-radius: 12px; border-left: 4px solid #EF4444; margin-bottom: 1.5rem;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+            <p style='margin: 0; color: #991B1B; font-weight: 700; font-size: 0.95rem;'>
                 ❌ Gemini AI: Not Configured
             </p>
         </div>
@@ -330,16 +597,16 @@ with st.sidebar:
                 st.session_state.addon_df = addon_df
                 st.session_state.spec_df = spec_df
                 st.session_state.def_dict = def_dict
-                st.success(f"Loaded {len(spec_df)} products")
+                st.success(f"✅ Loaded {len(spec_df)} products")
             except Exception as e:
-                st.error(f"Sync Failed: {e}")
+                st.error(f"❌ Sync Failed: {e}")
     
     st.markdown("---")
     
     # ===== 3. ANALYSIS OPTIONS =====
     st.markdown("### 🛠️ Options")
-    enable_ai_formatting = st.checkbox("Enable AI Text Formatting", value=True)
-    enable_fr_nfr = st.checkbox("Enable FR/NFR Classification", value=True)
+    enable_ai_formatting = st.checkbox("🤖 Enable AI Text Formatting", value=True)
+    enable_fr_nfr = st.checkbox("📊 Enable FR/NFR Classification", value=True)
     
     st.markdown("---")
     
@@ -347,35 +614,40 @@ with st.sidebar:
     st.markdown("### 📜 Save History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
-            with st.expander(f"Update #{len(st.session_state.save_history)-idx} - {record['timestamp'].split(' ')[1]}", expanded=False):
-                st.caption(f"Date: {record['timestamp']}")
+            with st.expander(f"🕐 Update #{len(st.session_state.save_history)-idx} - {record['timestamp'].split(' ')[1]}", expanded=False):
+                st.caption(f"📅 {record['timestamp']}")
                 st.write(f"**Saved:** {record['count']} rows")
                 if st.button(f"⏮️ Undo this save", key=f"undo_{idx}"):
                     with st.spinner("Reverting..."):
                         try:
                             undo_last_update(record['data'], sheet_url)
                             st.session_state.save_history.pop(-1-idx)
-                            st.success("Reverted successfully!")
+                            st.success("✅ Reverted successfully!")
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Undo Failed: {e}")
+                            st.error(f"❌ Undo Failed: {e}")
     else:
-        st.info("No save history yet")
+        st.info("📭 No save history yet")
 
 # ==========================================
 # MAIN APP
 # ==========================================
 
 st.markdown('<div class="main-header">WiseTOR Sense</div>', unsafe_allow_html=True)
-st.markdown('<div style="text-align: center; color: #64748B; margin-top: -10px;">AI-Powered Compliance Checking & Budget Estimation Tool</div>', unsafe_allow_html=True)
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("""
+<div style='text-align: center; margin-bottom: 2rem;'>
+    <p style='font-size: 1.1rem; color: var(--neutral-600); font-weight: 500;'>
+        AI-Powered Compliance Checking & Budget Estimation Tool
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Create Tabs
 tab_verify, tab_budget = st.tabs(["📊 Results & Verification", "💰 Budget Estimation"])
 
 # ==========================================
-# TAB 1: 
+# TAB 1: RESULTS & VERIFICATION
 # ==========================================
 with tab_verify:
 
@@ -401,9 +673,15 @@ with tab_verify:
             
         st.markdown(f"""
         <div class="file-info-card">
-            <div style="font-weight:700; margin-bottom:8px; color:#1E293B;">📄 Document Info</div>
-            <div style="font-size:0.9rem; color:#475569;"><strong>Name:</strong> {f_name}</div>
-            <div style="font-size:0.9rem; color:#475569;"><strong>Size:</strong> {f_size}</div>
+            <div style="font-weight:700; margin-bottom:12px; color:var(--neutral-900); font-size: 0.95rem;">
+                📄 Document Info
+            </div>
+            <div style="font-size:0.9rem; color:var(--neutral-700); margin-bottom: 6px;">
+                <strong>Name:</strong> {f_name}
+            </div>
+            <div style="font-size:0.9rem; color:var(--neutral-700);">
+                <strong>Size:</strong> {f_size}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -539,10 +817,16 @@ with tab_verify:
             <div class="custom-card" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
                 <div class="stat-label">Total Requirements</div>
                 <div class="stat-value-big">{total_req}</div>
-                <div style="width:100%; border-top:1px solid #F1F5F9; margin: 20px 0;"></div>
-                <div style="width:100%; font-size:0.95rem; display:flex; justify-content:space-between; padding:0 15px;">
-                    <span style="color:#10B981; font-weight:600;">✅ Edited: {cnt_edited}</span>
-                    <span style="color:#64748B; font-weight:600;">🤖 Auto: {cnt_auto}</span>
+                <div style="width:100%; border-top:2px solid var(--neutral-100); margin: 24px 0;"></div>
+                <div style="width:100%; font-size:1rem; display:flex; justify-content:space-between; padding:0 20px; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="color:var(--success-green); font-weight:700; font-size: 1.2rem;">{cnt_edited}</div>
+                        <div style="color:var(--neutral-600); font-size: 0.85rem; font-weight: 600;">✅ Edited</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="color:var(--neutral-500); font-weight:700; font-size: 1.2rem;">{cnt_auto}</div>
+                        <div style="color:var(--neutral-600); font-size: 0.85rem; font-weight: 600;">🤖 Auto</div>
+                    </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -582,7 +866,6 @@ with tab_verify:
         st.markdown("### 📋 Detailed Verification")
 
         # --- DATA EDITOR IN FORM ---
-        # ✅ FIX: Using st.form to prevent flickering on every click
         with st.form("editor_form"):
             df = st.session_state.processed_df.copy()
             
@@ -624,21 +907,24 @@ with tab_verify:
             <div class="legend-box">
                 <div style="display: flex; gap: 30px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
-                        <span class="legend-badge" style="background: linear-gradient(135deg, #2563EB, #60A5FA);">Selected Product</span>
-                        <div style="font-size:0.85rem; color:#475569;">
-                            • Can select multiple options<br>• Choose all that apply
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #3B82F6, #6366F1);">📦 Selected Product</span>
+                        <div style="font-size:0.9rem; color:var(--neutral-600); margin-top: 8px; line-height: 1.6;">
+                            • Can select multiple options<br>
+                            • Choose all that apply
                         </div>
                     </div>
                     <div style="flex: 1; min-width: 250px;">
-                        <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">Implementation</span>
-                        <div style="font-size:0.85rem; color:#475569;">
-                            • Select <strong>ONLY ONE</strong><br>• Auto-enforced for Non-Compliant
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #F59E0B, #D97706);">🔧 Implementation</span>
+                        <div style="font-size:0.9rem; color:var(--neutral-600); margin-top: 8px; line-height: 1.6;">
+                            • Select <strong>ONLY ONE</strong><br>
+                            • Auto-enforced for Non-Compliant
                         </div>
                     </div>
                     <div style="flex: 1; min-width: 200px;">
-                        <span class="legend-badge" style="background: linear-gradient(135deg, #64748B, #94A3B8);">Status</span>
-                        <div style="font-size:0.85rem; color:#475569;">
-                            🤖 Auto = System generated<br>✅ Edited = Manually changed
+                        <span class="legend-badge" style="background: linear-gradient(135deg, #64748B, #475569);">📝 Status</span>
+                        <div style="font-size:0.9rem; color:var(--neutral-600); margin-top: 8px; line-height: 1.6;">
+                            🤖 Auto = System generated<br>
+                            ✅ Edited = Manually changed
                         </div>
                     </div>
                 </div>
@@ -662,7 +948,7 @@ with tab_verify:
 
         # --- LOGIC ENFORCEMENT ON SUBMIT ---
         if submit_changes:
-            st.session_state.edited_df = edited_df_input # Capture state
+            st.session_state.edited_df = edited_df_input
             
             def normalize_selection(val_str):
                 if not val_str or pd.isna(val_str) or val_str == 'nan': return []
@@ -671,7 +957,6 @@ with tab_verify:
 
             impl_cols = [f"🔧 {i}" for i in impl_options]
             
-            # Use local variable for processing
             working_df = edited_df_input.copy()
 
             for i in working_df.index:
@@ -680,8 +965,6 @@ with tab_verify:
                 # 1. Single Select Logic (Implementation)
                 checked_impls = [col for col in impl_cols if working_df.loc[i, col]]
                 if len(checked_impls) > 1:
-                    # If multiple checked, keep only the Non-Compliant if present, else keep the first one/Standard/Customize logic
-                    # Simple rule: If Non-Compliant is checked, uncheck others. Else, uncheck Standard if Customize is checked (prioritize specific)
                     if working_df.loc[i, '🔧 Non-Compliant']:
                          working_df.loc[i, '🔧 Standard'] = False
                          working_df.loc[i, '🔧 Customize/Integration'] = False
@@ -694,7 +977,6 @@ with tab_verify:
                     for c in prod_cols_to_clear: 
                         working_df.loc[i, c] = False
                     
-                    # Auto force Implementation to Non-Compliant
                     working_df.loc[i, '🔧 Non-Compliant'] = True
                     working_df.loc[i, '🔧 Standard'] = False
                     working_df.loc[i, '🔧 Customize/Integration'] = False
@@ -713,13 +995,11 @@ with tab_verify:
                 new_status = '✅ Edited' if is_changed else '🤖 Auto'
                 working_df.loc[i, '📝 Status'] = new_status
                 
-                # Update Main Dataframe
                 st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str
                 st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str
                 st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = working_df.loc[i, 'Requirement_Type']
                 st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
 
-            # Save formatted df to display again
             st.session_state.edited_df = working_df
             st.success("✅ Changes Saved & Logic Applied!")
             time.sleep(0.5)
@@ -728,14 +1008,9 @@ with tab_verify:
         # --- FOOTER ACTIONS ---
         st.markdown("### 💾 Export & Save")
         
-        # Prepare Data (using edited_df if available)
         final_df = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
         
-        # Helper to regenerate formatted df from processed_df if needed for saving
-        # But we already have logic to sync processed_df on submit
-        
-        # Filter Non-Compliant for Sheet
-        raw_save_data = prepare_save_data(final_df, product_options, impl_options) # Use helper
+        raw_save_data = prepare_save_data(final_df, product_options, impl_options)
         valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
         
         def split_languages(row):
@@ -784,7 +1059,7 @@ with tab_verify:
                 st.session_state.clear(); st.rerun()
 
 # ==========================================
-# TAB 2: BUDGET
+# TAB 2: BUDGET ESTIMATION
 # ==========================================
 with tab_budget:
     st.markdown("### 💰 Budget Estimation")
@@ -793,7 +1068,7 @@ with tab_budget:
         st.warning("⚠️ Please complete the 'Results & Verification' step first.")
     else:
         if not st.session_state.budget_calculated:
-            if st.button("Generate Initial Budget", type="primary"):
+            if st.button("🎯 Generate Initial Budget", type="primary"):
                 with st.spinner("🤖 AI Calculating..."):
                     try:
                         factors = extract_budget_factors(st.session_state.tor_raw_text, st.session_state.gemini_key)
@@ -828,12 +1103,43 @@ with tab_budget:
                 grand_total = total_budget + manday_cost + other_expenses
                 
                 if mandays != 0:
-                    st.markdown(f"""<div style='background-color: #EFF6FF; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #BFDBFE;'><h4 style='color: #1E40AF; margin:0;'>🛠️ Customization Service</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'>{mandays} Mandays × 22,000 THB = <strong>{manday_cost:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); 
+                                padding: 20px; border-radius: 16px; margin-top: 20px; border: 2px solid #BFDBFE;
+                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                        <h4 style='color: #1E40AF; margin:0 0 12px 0; font-weight: 700;'>🛠️ Customization Service</h4>
+                        <p style='margin: 0; font-size: 1.2em; color: var(--neutral-700);'>
+                            <span style='font-weight: 600;'>{mandays} Mandays</span> × 
+                            <span style='font-weight: 600;'>22,000 THB</span> = 
+                            <strong style='color: var(--primary-blue); font-size: 1.3em;'>{manday_cost:,.0f} THB</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 if other_expenses != 0:
-                    st.markdown(f"""<div style='background-color: #FFF7ED; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #FED7AA;'><h4 style='color: #C2410C; margin:0;'>💸 Other Expenses</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'><strong>{other_expenses:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); 
+                                padding: 20px; border-radius: 16px; margin-top: 20px; border: 2px solid #FED7AA;
+                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                        <h4 style='color: #C2410C; margin:0 0 12px 0; font-weight: 700;'>💸 Other Expenses</h4>
+                        <p style='margin: 0; font-size: 1.3em;'>
+                            <strong style='color: var(--warning-amber-dark);'>{other_expenses:,.0f} THB</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                st.markdown(f"""<div style='background-color: #DCFCE7; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; text-align: right; margin-top:25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'><h4 style='color: #065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color: #047857; margin:0; font-size: 1.8rem;'>{grand_total:,.2f} THB/Year</h1></div>""", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
+                            padding: 32px; border-radius: 20px; border-left: 6px solid var(--success-green); 
+                            text-align: right; margin-top: 32px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
+                    <h4 style='color: #065F46; margin:0 0 12px 0; font-weight: 700; font-size: 1.2rem;'>
+                        💎 TOTAL ANNUAL BUDGET
+                    </h4>
+                    <h1 style='color: #047857; margin:0; font-size: 2.5rem; font-weight: 900; letter-spacing: -0.02em;'>
+                        {grand_total:,.2f} <span style='font-size: 1.5rem;'>THB/Year</span>
+                    </h1>
+                </div>
+                """, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ No suitable package found.")
             
@@ -845,12 +1151,12 @@ with tab_budget:
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    st.markdown("##### Zocial Eye Configuration")
+                    st.markdown("##### 🔵 Zocial Eye Configuration")
                     ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
                     ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
                 
                 with c2:
-                    st.markdown("##### Warroom Configuration")
+                    st.markdown("##### 🟡 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
                     wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
                     
@@ -859,9 +1165,9 @@ with tab_budget:
                     wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0))
                     wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
                 
-                st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+                st.markdown("<hr style='margin: 2rem 0; border-top: 2px solid var(--neutral-200);'>", unsafe_allow_html=True)
                 
-                st.markdown("##### Additional Costs")
+                st.markdown("##### 💵 Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
                     md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1)
@@ -879,4 +1185,12 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseTOR Sense v2.5.0 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.markdown("""
+<div style='text-align: center; padding: 20px; color: var(--neutral-500);'>
+    <p style='margin: 0; font-weight: 600;'>
+        WiseTOR Sense <span style='color: var(--primary-blue);'>v2.5.0</span> | 
+        Session: {date} | 
+        Powered by <span style='color: var(--accent-indigo);'>Gemini AI</span>
+    </p>
+</div>
+""".format(date=datetime.now().strftime('%Y-%m-%d')), unsafe_allow_html=True)
