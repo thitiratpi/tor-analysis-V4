@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.4.6\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.4.9\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -74,12 +74,12 @@ st.markdown("""
     .custom-card {
         background-color: white;
         padding: 1.5rem;
-        border-radius: 16px; /* Softer rounded corners */
+        border-radius: 16px;
         border: 1px solid var(--border-color);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         margin-bottom: 1rem;
         transition: transform 0.2s;
-        height: 100%;
+        /* height: 100%;  <-- REMOVED to let card fit content */
     }
     
     .custom-card:hover {
@@ -120,7 +120,7 @@ st.markdown("""
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 10px; /* More spacing */
+        padding: 12px 10px;
         border-bottom: 1px solid #F1F5F9;
     }
     .stat-row:last-child {
@@ -134,7 +134,7 @@ st.markdown("""
     .stat-count {
         font-size: 1.2rem;
         font-weight: 700;
-        color: var(--primary-color); /* Just text color, no background */
+        color: var(--primary-color);
     }
 
     /* ===== BUTTONS ===== */
@@ -519,7 +519,7 @@ with tab_verify:
         cnt_edited = len(df_stats[df_stats['📝 Status'] == '✅ Edited'])
         cnt_auto = total_req - cnt_edited
 
-        # --- DISPLAY STATS (CLEAN DESIGN - NO ICONS, NO BACKGROUND) ---
+        # --- DISPLAY STATS (CLEAN DESIGN - CENTERED - NO ICONS/BG) ---
         sc1, sc2, sc3 = st.columns([1, 1.5, 1.5])
         
         with sc1:
@@ -564,7 +564,6 @@ with tab_verify:
                 <div class="stat-row" style="border-bottom:none;">
                     <span class="stat-name">Customize</span> <span class="stat-count">{cnt_cust}</span>
                 </div>
-                <div style="height: 5.5rem;"></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -856,4 +855,4 @@ with tab_budget:
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseTOR Sense v2.4.6 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseTOR Sense v2.4.9 | Session: {datetime.now().strftime('%Y-%m-%d')}")
