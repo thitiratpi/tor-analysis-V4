@@ -24,7 +24,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.3.0\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.3.2\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -47,13 +47,6 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
-    }
-    
-    .stat-box-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #555;
-        margin-bottom: 5px;
     }
     
     .stat-list {
@@ -114,7 +107,7 @@ if 'gemini_key' not in st.session_state:
         st.session_state.gemini_key = None
 
 # ==========================================
-# SIDEBAR - CONFIGURATION (Original)
+# SIDEBAR - CONFIGURATION
 # ==========================================
 
 with st.sidebar:
@@ -596,7 +589,11 @@ with tab_budget:
                 for res in results:
                     # Formatting HTML for Accordion style
                     with st.expander(f"📦 {res['Product']}", expanded=True):
-                         st.markdown(format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown']), unsafe_allow_html=True)
+                         # ✅ FIX 1: Clean raw HTML to prevent indentation issues in Markdown
+                         raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
+                         clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
+                         
+                         st.markdown(clean_html, unsafe_allow_html=True)
                     
                     init_fee = res['Package'].get('Initial_Fee (THB)', 0)
                     if init_fee and isinstance(init_fee, (int, float)):
@@ -604,9 +601,25 @@ with tab_budget:
                     else:
                          total_budget += res['Breakdown']['total']
                 
+                # --- ✅ MODIFIED: CALCULATE MANDAYS COST ---
+                mandays = st.session_state.budget_factors.get('mandays', 0)
+                manday_cost = mandays * 22000
+                grand_total = total_budget + manday_cost
+                
+                # Show Manday Cost (If added)
+                if mandays != 0:
+                    st.markdown(f"""
+                    <div style='background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #90caf9;'>
+                        <h4 style='color: #1565c0; margin:0;'>🛠️ Customization Service</h4>
+                        <p style='margin: 5px 0 0 0; font-size: 1.1em;'>
+                            {mandays} Mandays × 22,000 THB = <strong>{manday_cost:,.0f} THB</strong>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
                 st.markdown(f"""
                 <div style='background-color: #d4edda; padding: 20px; border-radius: 10px; border-left: 5px solid #28a745; text-align: right; margin-top:20px;'>
-                    <h2 style='color: #155724; margin:0;'>💰 GRAND TOTAL: {total_budget:,.2f} THB/Year</h2>
+                    <h2 style='color: #155724; margin:0;'>💰 GRAND TOTAL: {grand_total:,.2f} THB/Year</h2>
                 </div>
                 """, unsafe_allow_html=True)
             else:
@@ -633,14 +646,26 @@ with tab_budget:
                 wr_ch = col_wr3.number_input("Social Channels", value=factors.get('social_channels_count', 0))
                 wr_bot = col_wr4.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
                 
+                # --- ✅ MODIFIED: ADD CUSTOMIZATION INPUT ---
+                st.caption("Customization Service")
+                md_input = st.number_input(
+                    "Customization Mandays (1 Manday = 22,000 THB)", 
+                    value=factors.get('mandays', 0), 
+                    step=1,
+                    help="Add or subtract mandays for custom requirements"
+                )
+                
                 if st.button("🔄 Recalculate Budget"):
                     st.session_state.budget_factors.update({
-                        'num_users': ze_users, 'data_backward_days': ze_days,
-                        'monthly_transactions': wr_tx, 'social_channels_count': wr_ch,
-                        'chatbot_required': wr_bot
+                        'num_users': ze_users, 
+                        'data_backward_days': ze_days,
+                        'monthly_transactions': wr_tx, 
+                        'social_channels_count': wr_ch,
+                        'chatbot_required': wr_bot,
+                        'mandays': md_input  # Save mandays to session state
                     })
                     st.rerun()
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.3.0 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.3.2 | Session: {datetime.now().strftime('%Y-%m-%d')}")
