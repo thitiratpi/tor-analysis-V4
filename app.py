@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseSight TOR Analyzer\nVersion 2.4.2\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseSight TOR Analyzer\nVersion 2.4.3\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -782,7 +782,8 @@ with tab_budget:
                 if other_expenses != 0:
                     st.markdown(f"""<div style='background-color: #FFF7ED; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #FED7AA;'><h4 style='color: #C2410C; margin:0;'>💸 Other Expenses</h4><p style='margin: 5px 0 0 0; font-size: 1.1em;'><strong>{other_expenses:,.0f} THB</strong></p></div>""", unsafe_allow_html=True)
 
-                st.markdown(f"""<div style='background-color: #DCFCE7; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; text-align: right; margin-top:25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'><h4 style='color: #065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color: #047857; margin:0; font-size: 2.5rem;'>{grand_total:,.2f} THB/Year</h1></div>""", unsafe_allow_html=True)
+                # ✅ FIX: Reduced font size for Grand Total (2.5rem -> 1.8rem)
+                st.markdown(f"""<div style='background-color: #DCFCE7; padding: 25px; border-radius: 12px; border-left: 6px solid #10B981; text-align: right; margin-top:25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);'><h4 style='color: #065F46; margin:0;'>TOTAL ANNUAL BUDGET</h4><h1 style='color: #047857; margin:0; font-size: 1.8rem;'>{grand_total:,.2f} THB/Year</h1></div>""", unsafe_allow_html=True)
             else:
                 st.warning("⚠️ No suitable package found.")
             
@@ -790,21 +791,21 @@ with tab_budget:
             st.markdown("#### ✏️ Adjust Budget Factors")
             
             with st.container():
-                # ✅ REMOVED <div class='custom-card'> wrapper
+                # ✅ FIX: Removed <div class='custom-card'> wrapper
                 factors = st.session_state.budget_factors
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    # ✅ CHANGED st.caption to st.markdown H5
+                    # ✅ FIX: Increased header size
                     st.markdown("##### 🔹 Zocial Eye Configuration")
                     ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
                     ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
                 
                 with c2:
-                    # ✅ CHANGED st.caption to st.markdown H5
+                    # ✅ FIX: Increased header size
                     st.markdown("##### 🔸 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
-                    wr_tx = st.number_input("Monthly Transaction", value=factors.get('monthly_transactions', 35000), step=1000)
+                    wr_tx = st.number_input("Monthly Tx", value=factors.get('monthly_transactions', 35000), step=1000)
                     
                 c3, c4 = st.columns(2)
                 with c3:
@@ -813,7 +814,7 @@ with tab_budget:
                 
                 st.markdown("<hr style='margin: 1.5rem 0; border-top: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
                 
-                # ✅ CHANGED st.caption to st.markdown H5
+                # ✅ FIX: Increased header size
                 st.markdown("##### ➕ Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
@@ -829,8 +830,7 @@ with tab_budget:
                         'chatbot_required': wr_bot, 'mandays': md_input, 'other_expenses': other_cost_input
                     })
                     st.rerun()
-                # ✅ REMOVED </div> closure
 
 # ===== FOOTER =====
 st.markdown("---")
-st.caption(f"WiseSight TOR Analyzer v2.4.2 | Session: {datetime.now().strftime('%Y-%m-%d')}")
+st.caption(f"WiseSight TOR Analyzer v2.4.3 | Session: {datetime.now().strftime('%Y-%m-%d')}")
