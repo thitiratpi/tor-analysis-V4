@@ -344,7 +344,7 @@ with st.sidebar:
     st.markdown("---")
     
     # ===== 4. SAVE HISTORY =====
-    st.markdown("### 📜 History")
+    st.markdown("### 📜 Save History")
     if st.session_state.save_history:
         for idx, record in enumerate(reversed(st.session_state.save_history[-5:])):
             with st.expander(f"Update #{len(st.session_state.save_history)-idx} - {record['timestamp'].split(' ')[1]}", expanded=False):
