@@ -368,7 +368,7 @@ with st.sidebar:
 # ==========================================
 
 st.markdown('<div class="main-header">WiseTOR Sense</div>', unsafe_allow_html=True)
-st.caption("AI-Powered Compliance Checking & Budget Estimation Tool")
+st.markdown('<div style="text-align: center; color: #64748B; margin-top: -10px;">AI-Powered Compliance Checking & Budget Estimation Tool</div>', unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
 # Create Tabs
