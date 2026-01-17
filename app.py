@@ -1011,17 +1011,31 @@ with tab_verify:
         final_df = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
         
         raw_save_data = prepare_save_data(final_df, product_options, impl_options)
-        valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
+        
+        # ✅ เพิ่มการตรวจสอบก่อนใช้งาน
+        if raw_save_data is not None and not raw_save_data.empty and 'Product' in raw_save_data.columns:
+            valid_data = raw_save_data[~raw_save_data['Product'].str.contains('Non-Compliant', na=False)].copy()
+        else:
+            valid_data = pd.DataFrame(columns=['Product', 'TOR_Sentence', 'Implementation'])
+            if st.session_state.analysis_done:  # แสดง warning เฉพาะเมื่อมีการวิเคราะห์แล้ว
+                st.warning("⚠️ ไม่พบข้อมูลที่ถูกต้องสำหรับการบันทึก กรุณาตรวจสอบการเลือกผลิตภัณฑ์")
         
         def split_languages(row):
             text = str(row['TOR_Sentence'])
-            if re.search(r'[\u0E00-\u0E7F]', text): return pd.Series([text, ""]) 
-            else: return pd.Series(["", text])
+            if re.search(r'[\u0E00-\u0E7F]', text): 
+                return pd.Series([text, ""]) 
+            else: 
+                return pd.Series(["", text])
         
-        if not valid_data.empty:
-            valid_data[['Sentence_TH', 'Sentence_ENG']] = valid_data.apply(split_languages, axis=1)
-            final_save_data = valid_data[['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation']]
-        else:
+        # ✅ เพิ่ม try-except
+        try:
+            if not valid_data.empty and 'TOR_Sentence' in valid_data.columns:
+                valid_data[['Sentence_TH', 'Sentence_ENG']] = valid_data.apply(split_languages, axis=1)
+                final_save_data = valid_data[['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation']]
+            else:
+                final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
+        except Exception as e:
+            st.error(f"❌ พบข้อผิดพลาดในการประมวลผลข้อมูล: {e}")
             final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
 
         c1, c2, c3 = st.columns(3)
