@@ -1006,7 +1006,7 @@ with tab_verify:
             st.rerun()
 
         # --- FOOTER ACTIONS ---
-        st.markdown("### 💾 Export & Save")
+        st.markdown("### 💾 Export & Update Spec")
         
         final_df = st.session_state.edited_df if st.session_state.edited_df is not None else st.session_state.processed_df.copy()
         
@@ -1040,7 +1040,7 @@ with tab_verify:
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            if st.button("💾 Save to Google Sheet", type="primary", disabled=len(final_save_data)==0):
+            if st.button("💾 Update product spec", type="primary", disabled=len(final_save_data)==0):
                 with st.spinner("Saving to Google Sheet..."):
                     try:
                         save_to_product_spec(final_save_data, sheet_url)
