@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.5.0\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.5.1\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -536,6 +536,8 @@ if 'user_modified_rows' not in st.session_state: st.session_state.user_modified_
 # File Info
 if 'file_name' not in st.session_state: st.session_state.file_name = ""
 if 'file_size' not in st.session_state: st.session_state.file_size = 0
+# ✅ Adjusted factors for budget
+if 'adjusted_factors' not in st.session_state: st.session_state.adjusted_factors = None
 
 # ✅ Initialize API key from secrets
 if 'gemini_key' not in st.session_state:
@@ -1035,7 +1037,7 @@ with tab_verify:
             else:
                 final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
         except Exception as e:
-            st.error(f"❌ พบข้อผิดพลาดในการประมวลผลข้อมูล: {e}")
+            st.error(f"❌ Error processing data: {e}")
             final_save_data = pd.DataFrame(columns=['Product', 'Sentence_TH', 'Sentence_ENG', 'Implementation'])
 
         c1, c2, c3 = st.columns(3)
@@ -1073,7 +1075,7 @@ with tab_verify:
                 st.session_state.clear(); st.rerun()
 
 # ==========================================
-# TAB 2: BUDGET ESTIMATION
+# TAB 2: BUDGET ESTIMATION (✅ RESTRUCTURED)
 # ==========================================
 with tab_budget:
     st.markdown("### 💰 Budget Estimation")
@@ -1082,127 +1084,346 @@ with tab_budget:
         st.warning("⚠️ Please complete the 'Results & Verification' step first.")
     else:
         if not st.session_state.budget_calculated:
-            if st.button("🎯 Generate Initial Budget", type="primary"):
+            if st.button("🎯 Generate Budget Estimation", type="primary"):
                 with st.spinner("🤖 AI Calculating..."):
                     try:
                         factors = extract_budget_factors(st.session_state.tor_raw_text, st.session_state.gemini_key)
                         st.session_state.budget_factors = factors
+                        st.session_state.adjusted_factors = factors.copy()  # เก็บค่าสำหรับ adjustment
                         st.session_state.budget_calculated = True
                         st.rerun()
                     except Exception as e: st.error(f"❌ Failed: {e}")
         
         if st.session_state.budget_calculated:
-            results = calculate_budget_sheets(
+            # ==========================================
+            # SECTION 1: SYSTEM ESTIMATION
+            # ==========================================
+            st.markdown("---")
+            st.markdown("## 🤖 System Estimation")
+            st.caption("AI-generated budget based on TOR analysis")
+            
+            system_results = calculate_budget_sheets(
                 st.session_state.budget_factors, st.session_state.matched_products,
                 st.session_state.pricing_df, st.session_state.addon_df
             )
             
-            st.markdown("#### 🧾 Cost Breakdown")
+            system_total = 0
+            system_product_cost = 0
             
-            total_budget = 0
-            if results:
-                for res in results:
-                    with st.expander(f"📦 {res['Product']}", expanded=True):
+            if system_results:
+                st.markdown("#### 📦 Product Breakdown")
+                for res in system_results:
+                    with st.expander(f"📦 {res['Product']}", expanded=False):
                          raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
                          clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
                          st.markdown(clean_html, unsafe_allow_html=True)
                     
                     init_fee = res['Package'].get('Initial_Fee (THB)', 0)
-                    if init_fee and isinstance(init_fee, (int, float)): total_budget += res['Breakdown']['total'] + init_fee
-                    else: total_budget += res['Breakdown']['total']
+                    if init_fee and isinstance(init_fee, (int, float)): 
+                        system_product_cost += res['Breakdown']['total'] + init_fee
+                    else: 
+                        system_product_cost += res['Breakdown']['total']
                 
-                mandays = st.session_state.budget_factors.get('mandays', 0)
-                manday_cost = mandays * 22000
-                other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
-                grand_total = total_budget + manday_cost + other_expenses
+                system_mandays = st.session_state.budget_factors.get('mandays', 0)
+                system_manday_cost = system_mandays * 22000
+                system_other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
+                system_total = system_product_cost + system_manday_cost + system_other_expenses
                 
-                if mandays != 0:
+                # Summary for System Estimation
+                st.markdown("#### 📊 System Estimation Summary")
+                
+                col_s1, col_s2, col_s3 = st.columns(3)
+                
+                with col_s1:
                     st.markdown(f"""
                     <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); 
-                                padding: 20px; border-radius: 16px; margin-top: 20px; border: 2px solid #BFDBFE;
+                                padding: 20px; border-radius: 16px; border: 2px solid #BFDBFE; height: 140px;
+                                display: flex; flex-direction: column; justify-content: center;
                                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
-                        <h4 style='color: #1E40AF; margin:0 0 12px 0; font-weight: 700;'>🛠️ Customization Service</h4>
-                        <p style='margin: 0; font-size: 1.2em; color: var(--neutral-700);'>
-                            <span style='font-weight: 600;'>{mandays} Mandays</span> × 
-                            <span style='font-weight: 600;'>22,000 THB</span> = 
-                            <strong style='color: var(--primary-blue); font-size: 1.3em;'>{manday_cost:,.0f} THB</strong>
+                        <h4 style='color: #1E40AF; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💼 Product Licenses</h4>
+                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: var(--primary-blue);'>
+                            {system_product_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
                 
-                if other_expenses != 0:
+                with col_s2:
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); 
-                                padding: 20px; border-radius: 16px; margin-top: 20px; border: 2px solid #FED7AA;
+                    <div style='background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); 
+                                padding: 20px; border-radius: 16px; border: 2px solid #DDD6FE; height: 140px;
+                                display: flex; flex-direction: column; justify-content: center;
                                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
-                        <h4 style='color: #C2410C; margin:0 0 12px 0; font-weight: 700;'>💸 Other Expenses</h4>
-                        <p style='margin: 0; font-size: 1.3em;'>
-                            <strong style='color: var(--warning-amber-dark);'>{other_expenses:,.0f} THB</strong>
+                        <h4 style='color: #6D28D9; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>🛠️ Customization</h4>
+                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #8B5CF6;'>
+                            {system_manday_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                        </p>
+                        <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: #6D28D9;'>
+                            {system_mandays} Mandays × 22,000
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
-
+                
+                with col_s3:
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); 
+                                padding: 20px; border-radius: 16px; border: 2px solid #FED7AA; height: 140px;
+                                display: flex; flex-direction: column; justify-content: center;
+                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                        <h4 style='color: #C2410C; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💸 Other Expenses</h4>
+                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #F59E0B;'>
+                            {system_other_expenses:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # System Total
                 st.markdown(f"""
-                <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
-                            padding: 32px; border-radius: 20px; border-left: 6px solid var(--success-green); 
-                            text-align: right; margin-top: 32px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);'>
-                    <h4 style='color: #065F46; margin:0 0 12px 0; font-weight: 700; font-size: 1.2rem;'>
-                        💎 TOTAL ANNUAL BUDGET
+                <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%); 
+                            padding: 24px 32px; border-radius: 16px; border: 2px solid #93C5FD; 
+                            text-align: right; margin-top: 20px; box-shadow: 0 6px 12px -2px rgba(0,0,0,0.1);'>
+                    <h4 style='color: #1E40AF; margin:0 0 8px 0; font-weight: 700; font-size: 1rem;'>
+                        🤖 System Estimation Total
                     </h4>
-                    <h1 style='color: #047857; margin:0; font-size: 2.5rem; font-weight: 900; letter-spacing: -0.02em;'>
-                        {grand_total:,.2f} <span style='font-size: 1.5rem;'>THB/Year</span>
+                    <h1 style='color: #2563EB; margin:0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em;'>
+                        {system_total:,.2f} <span style='font-size: 1.3rem;'>THB/Year</span>
                     </h1>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ No suitable package found.")
             
+            # ==========================================
+            # SECTION 2: ADJUST BUDGET FACTORS
+            # ==========================================
             st.markdown("---")
-            st.markdown("#### ✏️ Adjust Budget Factors")
+            st.markdown("## ✏️ Adjust Budget Factors")
+            st.caption("Customize parameters to refine your budget estimate")
             
             with st.container():
-                factors = st.session_state.budget_factors
+                # Initialize adjusted_factors if not exists
+                if 'adjusted_factors' not in st.session_state:
+                    st.session_state.adjusted_factors = st.session_state.budget_factors.copy()
+                
+                factors = st.session_state.adjusted_factors
                 
                 c1, c2 = st.columns(2)
                 with c1:
                     st.markdown("##### 🔵 Zocial Eye Configuration")
-                    ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1)
-                    ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30)
+                    ze_users = st.number_input("Users", value=factors.get('num_users', 2), min_value=1, key="adj_ze_users")
+                    ze_days = st.number_input("Data Backward (Days)", value=factors.get('data_backward_days', 90), step=30, key="adj_ze_days")
                 
                 with c2:
                     st.markdown("##### 🟡 Warroom Configuration")
-                    wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="wr_u")
-                    wr_tx = st.number_input("Monthly Transaction", value=factors.get('monthly_transactions', 35000), step=1000)
+                    wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="adj_wr_users")
+                    wr_tx = st.number_input("Monthly Transaction", value=factors.get('monthly_transactions', 35000), step=1000, key="adj_wr_tx")
                     
                 c3, c4 = st.columns(2)
                 with c3:
-                    wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0))
-                    wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False))
+                    wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0), key="adj_wr_ch")
+                    wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False), key="adj_wr_bot")
                 
                 st.markdown("<hr style='margin: 2rem 0; border-top: 2px solid var(--neutral-200);'>", unsafe_allow_html=True)
                 
                 st.markdown("##### 💵 Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
-                    md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1)
+                    md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1, key="adj_mandays")
                 with c6:
-                    other_cost_input = st.number_input("Other Expenses (THB)", value=float(factors.get('other_expenses', 0.0)), step=1000.0)
+                    other_cost_input = st.number_input("Other Expenses (THB)", value=float(factors.get('other_expenses', 0.0)), step=1000.0, key="adj_other")
                 
                 st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🔄 Recalculate Budget", type="primary"):
-                    st.session_state.budget_factors.update({
-                        'num_users': ze_users, 'data_backward_days': ze_days,
-                        'monthly_transactions': wr_tx, 'social_channels_count': wr_ch,
-                        'chatbot_required': wr_bot, 'mandays': md_input, 'other_expenses': other_cost_input
-                    })
-                    st.rerun()
+                
+                # Update adjusted factors
+                st.session_state.adjusted_factors.update({
+                    'num_users': ze_users, 
+                    'data_backward_days': ze_days,
+                    'monthly_transactions': wr_tx, 
+                    'social_channels_count': wr_ch,
+                    'chatbot_required': wr_bot, 
+                    'mandays': md_input, 
+                    'other_expenses': other_cost_input
+                })
+                
+                # Calculate adjusted budget
+                adjusted_results = calculate_budget_sheets(
+                    st.session_state.adjusted_factors, st.session_state.matched_products,
+                    st.session_state.pricing_df, st.session_state.addon_df
+                )
+                
+                adjusted_total = 0
+                adjusted_product_cost = 0
+                
+                if adjusted_results:
+                    for res in adjusted_results:
+                        init_fee = res['Package'].get('Initial_Fee (THB)', 0)
+                        if init_fee and isinstance(init_fee, (int, float)): 
+                            adjusted_product_cost += res['Breakdown']['total'] + init_fee
+                        else: 
+                            adjusted_product_cost += res['Breakdown']['total']
+                    
+                    adjusted_mandays = st.session_state.adjusted_factors.get('mandays', 0)
+                    adjusted_manday_cost = adjusted_mandays * 22000
+                    adjusted_other_expenses = st.session_state.adjusted_factors.get('other_expenses', 0.0)
+                    adjusted_total = adjusted_product_cost + adjusted_manday_cost + adjusted_other_expenses
+                    
+                    # Summary for Adjusted Budget
+                    st.markdown("#### 📊 Adjusted Budget Summary")
+                    
+                    col_a1, col_a2, col_a3 = st.columns(3)
+                    
+                    with col_a1:
+                        diff_product = adjusted_product_cost - system_product_cost
+                        diff_color = "#10B981" if diff_product <= 0 else "#EF4444"
+                        diff_symbol = "▼" if diff_product < 0 else ("▲" if diff_product > 0 else "●")
+                        
+                        st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); 
+                                    padding: 20px; border-radius: 16px; border: 2px solid #BFDBFE; height: 140px;
+                                    display: flex; flex-direction: column; justify-content: center;
+                                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                            <h4 style='color: #1E40AF; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💼 Product Licenses</h4>
+                            <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: var(--primary-blue);'>
+                                {adjusted_product_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                            </p>
+                            <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: {diff_color}; font-weight: 700;'>
+                                {diff_symbol} {abs(diff_product):,.0f} THB
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_a2:
+                        diff_manday = adjusted_manday_cost - system_manday_cost
+                        diff_color = "#10B981" if diff_manday <= 0 else "#EF4444"
+                        diff_symbol = "▼" if diff_manday < 0 else ("▲" if diff_manday > 0 else "●")
+                        
+                        st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); 
+                                    padding: 20px; border-radius: 16px; border: 2px solid #DDD6FE; height: 140px;
+                                    display: flex; flex-direction: column; justify-content: center;
+                                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                            <h4 style='color: #6D28D9; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>🛠️ Customization</h4>
+                            <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #8B5CF6;'>
+                                {adjusted_manday_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                            </p>
+                            <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: {diff_color}; font-weight: 700;'>
+                                {diff_symbol} {abs(diff_manday):,.0f} THB
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_a3:
+                        diff_other = adjusted_other_expenses - system_other_expenses
+                        diff_color = "#10B981" if diff_other <= 0 else "#EF4444"
+                        diff_symbol = "▼" if diff_other < 0 else ("▲" if diff_other > 0 else "●")
+                        
+                        st.markdown(f"""
+                        <div style='background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); 
+                                    padding: 20px; border-radius: 16px; border: 2px solid #FED7AA; height: 140px;
+                                    display: flex; flex-direction: column; justify-content: center;
+                                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
+                            <h4 style='color: #C2410C; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💸 Other Expenses</h4>
+                            <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #F59E0B;'>
+                                {adjusted_other_expenses:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                            </p>
+                            <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: {diff_color}; font-weight: 700;'>
+                                {diff_symbol} {abs(diff_other):,.0f} THB
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Adjusted Total
+                    diff_total = adjusted_total - system_total
+                    diff_color = "#10B981" if diff_total <= 0 else "#EF4444"
+                    diff_symbol = "▼" if diff_total < 0 else ("▲" if diff_total > 0 else "●")
+                    
+                    st.markdown(f"""
+                    <div style='background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%); 
+                                padding: 24px 32px; border-radius: 16px; border: 2px solid #DDD6FE; 
+                                text-align: right; margin-top: 20px; box-shadow: 0 6px 12px -2px rgba(0,0,0,0.1);'>
+                        <h4 style='color: #6D28D9; margin:0 0 8px 0; font-weight: 700; font-size: 1rem;'>
+                            ✏️ Adjusted Budget Total
+                        </h4>
+                        <h1 style='color: #8B5CF6; margin:0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em;'>
+                            {adjusted_total:,.2f} <span style='font-size: 1.3rem;'>THB/Year</span>
+                        </h1>
+                        <p style='margin: 8px 0 0 0; font-size: 1rem; color: {diff_color}; font-weight: 700;'>
+                            {diff_symbol} {abs(diff_total):,.2f} THB from system estimation
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # ==========================================
+            # SECTION 3: TOTAL BUDGET COMPARISON
+            # ==========================================
+            st.markdown("---")
+            st.markdown("## 💎 Total Budget Summary")
+            
+            col_final1, col_final2 = st.columns(2)
+            
+            with col_final1:
+                st.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.9); 
+                            padding: 32px; border-radius: 20px; border: 3px solid #93C5FD; 
+                            text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
+                    <h3 style='color: #1E40AF; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                        🤖 System Estimation
+                    </h3>
+                    <h1 style='color: #2563EB; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                        {system_total:,.2f}
+                    </h1>
+                    <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                        THB/Year
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col_final2:
+                st.markdown(f"""
+                <div style='background: rgba(255, 255, 255, 0.9); 
+                            padding: 32px; border-radius: 20px; border: 3px solid #DDD6FE; 
+                            text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
+                    <h3 style='color: #6D28D9; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                        ✏️ Adjusted Budget
+                    </h3>
+                    <h1 style='color: #8B5CF6; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                        {adjusted_total:,.2f}
+                    </h1>
+                    <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                        THB/Year
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Final Recommendation
+            recommended = "adjusted" if abs(adjusted_total - system_total) > 0 else "system"
+            recommend_amount = adjusted_total if recommended == "adjusted" else system_total
+            recommend_icon = "✏️" if recommended == "adjusted" else "🤖"
+            recommend_label = "Adjusted Budget" if recommended == "adjusted" else "System Estimation"
+            
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
+                        padding: 40px; border-radius: 24px; border-left: 8px solid var(--success-green); 
+                        text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
+                <h2 style='color: #065F46; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
+                    {recommend_icon} Recommended Budget: {recommend_label}
+                </h2>
+                <h1 style='color: #047857; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
+                    {recommend_amount:,.2f}
+                </h1>
+                <p style='margin: 12px 0 0 0; color: #065F46; font-size: 1.4rem; font-weight: 700;'>
+                    THB per Year
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
 # ===== FOOTER =====
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; padding: 20px; color: var(--neutral-500);'>
     <p style='margin: 0; font-weight: 600;'>
-        WiseTOR Sense <span style='color: var(--primary-blue);'>v2.5.0</span> | 
+        WiseTOR Sense <span style='color: var(--primary-blue);'>v2.5.1</span> | 
         Session: {date} | 
         Powered by <span style='color: var(--accent-indigo);'>Gemini AI</span>
     </p>
