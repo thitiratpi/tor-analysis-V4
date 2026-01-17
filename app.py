@@ -26,7 +26,7 @@ st.set_page_config(
     menu_items={
         'Get Help': 'https://github.com/yourusername/wisesight-streamlit',
         'Report a bug': "https://github.com/yourusername/wisesight-streamlit/issues",
-        'About': "# WiseTOR Sense\nVersion 2.5.1\nPowered by Streamlit + Gemini AI"
+        'About': "# WiseTOR Sense\nVersion 2.5.2\nPowered by Streamlit + Gemini AI"
     }
 )
 
@@ -538,6 +538,7 @@ if 'file_name' not in st.session_state: st.session_state.file_name = ""
 if 'file_size' not in st.session_state: st.session_state.file_size = 0
 # ✅ Adjusted factors for budget
 if 'adjusted_factors' not in st.session_state: st.session_state.adjusted_factors = None
+if 'show_adjusted_breakdown' not in st.session_state: st.session_state.show_adjusted_breakdown = False
 
 # ✅ Initialize API key from secrets
 if 'gemini_key' not in st.session_state:
@@ -1075,7 +1076,7 @@ with tab_verify:
                 st.session_state.clear(); st.rerun()
 
 # ==========================================
-# TAB 2: BUDGET ESTIMATION (✅ RESTRUCTURED)
+# TAB 2: BUDGET ESTIMATION (✅ RESTRUCTURED v2)
 # ==========================================
 with tab_budget:
     st.markdown("### 💰 Budget Estimation")
@@ -1091,16 +1092,21 @@ with tab_budget:
                         st.session_state.budget_factors = factors
                         st.session_state.adjusted_factors = factors.copy()  # เก็บค่าสำหรับ adjustment
                         st.session_state.budget_calculated = True
+                        st.session_state.show_adjusted_breakdown = False  # Reset breakdown display
                         st.rerun()
                     except Exception as e: st.error(f"❌ Failed: {e}")
         
         if st.session_state.budget_calculated:
+            # Initialize show_adjusted_breakdown if not exists
+            if 'show_adjusted_breakdown' not in st.session_state:
+                st.session_state.show_adjusted_breakdown = False
+            
             # ==========================================
             # SECTION 1: SYSTEM ESTIMATION
             # ==========================================
             st.markdown("---")
             st.markdown("## 🤖 System Estimation")
-            st.caption("AI-generated budget based on TOR analysis")
+            st.caption("AI-generated budget based on TOR analysis - Products Only")
             
             system_results = calculate_budget_sheets(
                 st.session_state.budget_factors, st.session_state.matched_products,
@@ -1108,70 +1114,51 @@ with tab_budget:
             )
             
             system_total = 0
-            system_product_cost = 0
+            system_ze_cost = 0
+            system_wr_cost = 0
             
             if system_results:
-                st.markdown("#### 📦 Product Breakdown")
+                # Calculate costs per product
                 for res in system_results:
-                    with st.expander(f"📦 {res['Product']}", expanded=False):
-                         raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
-                         clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
-                         st.markdown(clean_html, unsafe_allow_html=True)
-                    
                     init_fee = res['Package'].get('Initial_Fee (THB)', 0)
+                    product_cost = res['Breakdown']['total']
                     if init_fee and isinstance(init_fee, (int, float)): 
-                        system_product_cost += res['Breakdown']['total'] + init_fee
-                    else: 
-                        system_product_cost += res['Breakdown']['total']
+                        product_cost += init_fee
+                    
+                    if res['Product'] == 'Zocial Eye':
+                        system_ze_cost = product_cost
+                    elif res['Product'] == 'Warroom':
+                        system_wr_cost = product_cost
+                    
+                    system_total += product_cost
                 
-                system_mandays = st.session_state.budget_factors.get('mandays', 0)
-                system_manday_cost = system_mandays * 22000
-                system_other_expenses = st.session_state.budget_factors.get('other_expenses', 0.0)
-                system_total = system_product_cost + system_manday_cost + system_other_expenses
-                
-                # Summary for System Estimation
+                # Summary for System Estimation - Only 2 Products
                 st.markdown("#### 📊 System Estimation Summary")
                 
-                col_s1, col_s2, col_s3 = st.columns(3)
+                col_s1, col_s2 = st.columns(2)
                 
                 with col_s1:
                     st.markdown(f"""
                     <div style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%); 
-                                padding: 20px; border-radius: 16px; border: 2px solid #BFDBFE; height: 140px;
+                                padding: 24px; border-radius: 16px; border: 2px solid #BFDBFE; height: 160px;
                                 display: flex; flex-direction: column; justify-content: center;
                                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
-                        <h4 style='color: #1E40AF; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💼 Product Licenses</h4>
-                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: var(--primary-blue);'>
-                            {system_product_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                        <h4 style='color: #1E40AF; margin:0 0 12px 0; font-weight: 700; font-size: 1rem;'>🔵 Zocial Eye</h4>
+                        <p style='margin: 0; font-size: 2rem; font-weight: 900; color: var(--primary-blue);'>
+                            {system_ze_cost:,.0f} <span style='font-size: 1.1rem; font-weight: 600;'>THB</span>
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col_s2:
                     st.markdown(f"""
-                    <div style='background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); 
-                                padding: 20px; border-radius: 16px; border: 2px solid #DDD6FE; height: 140px;
-                                display: flex; flex-direction: column; justify-content: center;
-                                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
-                        <h4 style='color: #6D28D9; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>🛠️ Customization</h4>
-                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #8B5CF6;'>
-                            {system_manday_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
-                        </p>
-                        <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: #6D28D9;'>
-                            {system_mandays} Mandays × 22,000
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_s3:
-                    st.markdown(f"""
                     <div style='background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%); 
-                                padding: 20px; border-radius: 16px; border: 2px solid #FED7AA; height: 140px;
+                                padding: 24px; border-radius: 16px; border: 2px solid #FED7AA; height: 160px;
                                 display: flex; flex-direction: column; justify-content: center;
                                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);'>
-                        <h4 style='color: #C2410C; margin:0 0 8px 0; font-weight: 700; font-size: 0.9rem;'>💸 Other Expenses</h4>
-                        <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #F59E0B;'>
-                            {system_other_expenses:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
+                        <h4 style='color: #C2410C; margin:0 0 12px 0; font-weight: 700; font-size: 1rem;'>🟡 Warroom</h4>
+                        <p style='margin: 0; font-size: 2rem; font-weight: 900; color: #F59E0B;'>
+                            {system_wr_cost:,.0f} <span style='font-size: 1.1rem; font-weight: 600;'>THB</span>
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1199,7 +1186,7 @@ with tab_budget:
             st.markdown("## ✏️ Adjust Budget Factors")
             st.caption("Customize parameters to refine your budget estimate")
             
-            with st.container():
+            with st.form("adjust_budget_form"):
                 # Initialize adjusted_factors if not exists
                 if 'adjusted_factors' not in st.session_state:
                     st.session_state.adjusted_factors = st.session_state.budget_factors.copy()
@@ -1233,6 +1220,11 @@ with tab_budget:
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
+                # Recalculate Button
+                recalculate_btn = st.form_submit_button("🔄 Recalculate Budget", type="primary")
+            
+            # Handle Recalculate
+            if recalculate_btn:
                 # Update adjusted factors
                 st.session_state.adjusted_factors.update({
                     'num_users': ze_users, 
@@ -1243,7 +1235,11 @@ with tab_budget:
                     'mandays': md_input, 
                     'other_expenses': other_cost_input
                 })
-                
+                st.session_state.show_adjusted_breakdown = True
+                st.rerun()
+            
+            # Show Adjusted Budget if recalculated
+            if st.session_state.show_adjusted_breakdown:
                 # Calculate adjusted budget
                 adjusted_results = calculate_budget_sheets(
                     st.session_state.adjusted_factors, st.session_state.matched_products,
@@ -1252,14 +1248,29 @@ with tab_budget:
                 
                 adjusted_total = 0
                 adjusted_product_cost = 0
+                adjusted_ze_cost = 0
+                adjusted_wr_cost = 0
                 
                 if adjusted_results:
+                    # Show Product Package Breakdown
+                    st.markdown("#### 📦 Adjusted Product Package Details")
                     for res in adjusted_results:
+                        with st.expander(f"📦 {res['Product']}", expanded=True):
+                             raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.adjusted_factors, res['Breakdown'])
+                             clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
+                             st.markdown(clean_html, unsafe_allow_html=True)
+                        
                         init_fee = res['Package'].get('Initial_Fee (THB)', 0)
+                        product_cost = res['Breakdown']['total']
                         if init_fee and isinstance(init_fee, (int, float)): 
-                            adjusted_product_cost += res['Breakdown']['total'] + init_fee
-                        else: 
-                            adjusted_product_cost += res['Breakdown']['total']
+                            product_cost += init_fee
+                        
+                        if res['Product'] == 'Zocial Eye':
+                            adjusted_ze_cost = product_cost
+                        elif res['Product'] == 'Warroom':
+                            adjusted_wr_cost = product_cost
+                        
+                        adjusted_product_cost += product_cost
                     
                     adjusted_mandays = st.session_state.adjusted_factors.get('mandays', 0)
                     adjusted_manday_cost = adjusted_mandays * 22000
@@ -1272,7 +1283,7 @@ with tab_budget:
                     col_a1, col_a2, col_a3 = st.columns(3)
                     
                     with col_a1:
-                        diff_product = adjusted_product_cost - system_product_cost
+                        diff_product = adjusted_product_cost - system_total
                         diff_color = "#10B981" if diff_product <= 0 else "#EF4444"
                         diff_symbol = "▼" if diff_product < 0 else ("▲" if diff_product > 0 else "●")
                         
@@ -1292,6 +1303,7 @@ with tab_budget:
                         """, unsafe_allow_html=True)
                     
                     with col_a2:
+                        system_manday_cost = 0  # System has no mandays
                         diff_manday = adjusted_manday_cost - system_manday_cost
                         diff_color = "#10B981" if diff_manday <= 0 else "#EF4444"
                         diff_symbol = "▼" if diff_manday < 0 else ("▲" if diff_manday > 0 else "●")
@@ -1312,6 +1324,7 @@ with tab_budget:
                         """, unsafe_allow_html=True)
                     
                     with col_a3:
+                        system_other_expenses = 0  # System has no other expenses
                         diff_other = adjusted_other_expenses - system_other_expenses
                         diff_color = "#10B981" if diff_other <= 0 else "#EF4444"
                         diff_symbol = "▼" if diff_other < 0 else ("▲" if diff_other > 0 else "●")
@@ -1351,6 +1364,8 @@ with tab_budget:
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
+                else:
+                    adjusted_total = 0
             
             # ==========================================
             # SECTION 3: TOTAL BUDGET COMPARISON
@@ -1358,72 +1373,94 @@ with tab_budget:
             st.markdown("---")
             st.markdown("## 💎 Total Budget Summary")
             
-            col_final1, col_final2 = st.columns(2)
-            
-            with col_final1:
+            if st.session_state.show_adjusted_breakdown:
+                # Show comparison if adjusted budget exists
+                col_final1, col_final2 = st.columns(2)
+                
+                with col_final1:
+                    st.markdown(f"""
+                    <div style='background: rgba(255, 255, 255, 0.9); 
+                                padding: 32px; border-radius: 20px; border: 3px solid #93C5FD; 
+                                text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
+                        <h3 style='color: #1E40AF; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                            🤖 System Estimation
+                        </h3>
+                        <h1 style='color: #2563EB; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                            {system_total:,.2f}
+                        </h1>
+                        <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                            THB/Year
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col_final2:
+                    st.markdown(f"""
+                    <div style='background: rgba(255, 255, 255, 0.9); 
+                                padding: 32px; border-radius: 20px; border: 3px solid #DDD6FE; 
+                                text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
+                        <h3 style='color: #6D28D9; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                            ✏️ Adjusted Budget
+                        </h3>
+                        <h1 style='color: #8B5CF6; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                            {adjusted_total:,.2f}
+                        </h1>
+                        <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                            THB/Year
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Final Recommendation
+                recommended = "adjusted" if abs(adjusted_total - system_total) > 0 else "system"
+                recommend_amount = adjusted_total if recommended == "adjusted" else system_total
+                recommend_icon = "✏️" if recommended == "adjusted" else "🤖"
+                recommend_label = "Adjusted Budget" if recommended == "adjusted" else "System Estimation"
+                
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
+                            padding: 40px; border-radius: 24px; border-left: 8px solid var(--success-green); 
+                            text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
+                    <h2 style='color: #065F46; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
+                        {recommend_icon} Recommended Budget: {recommend_label}
+                    </h2>
+                    <h1 style='color: #047857; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
+                        {recommend_amount:,.2f}
+                    </h1>
+                    <p style='margin: 12px 0 0 0; color: #065F46; font-size: 1.4rem; font-weight: 700;'>
+                        THB per Year
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                # Show only system estimation if not recalculated yet
                 st.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.9); 
-                            padding: 32px; border-radius: 20px; border: 3px solid #93C5FD; 
-                            text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
-                    <h3 style='color: #1E40AF; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
-                        🤖 System Estimation
-                    </h3>
-                    <h1 style='color: #2563EB; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                            padding: 40px; border-radius: 24px; border: 3px solid #93C5FD; 
+                            text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
+                    <h2 style='color: #1E40AF; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
+                        🤖 Current Budget Estimation
+                    </h2>
+                    <h1 style='color: #2563EB; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
                         {system_total:,.2f}
                     </h1>
-                    <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
-                        THB/Year
+                    <p style='margin: 12px 0 0 0; color: #64748B; font-size: 1.4rem; font-weight: 700;'>
+                        THB per Year
+                    </p>
+                    <p style='margin: 20px 0 0 0; color: #64748B; font-size: 1rem; font-weight: 500;'>
+                        💡 Adjust the factors above and click "Recalculate Budget" to see customized estimates
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            with col_final2:
-                st.markdown(f"""
-                <div style='background: rgba(255, 255, 255, 0.9); 
-                            padding: 32px; border-radius: 20px; border: 3px solid #DDD6FE; 
-                            text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
-                    <h3 style='color: #6D28D9; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
-                        ✏️ Adjusted Budget
-                    </h3>
-                    <h1 style='color: #8B5CF6; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
-                        {adjusted_total:,.2f}
-                    </h1>
-                    <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
-                        THB/Year
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Final Recommendation
-            recommended = "adjusted" if abs(adjusted_total - system_total) > 0 else "system"
-            recommend_amount = adjusted_total if recommended == "adjusted" else system_total
-            recommend_icon = "✏️" if recommended == "adjusted" else "🤖"
-            recommend_label = "Adjusted Budget" if recommended == "adjusted" else "System Estimation"
-            
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
-                        padding: 40px; border-radius: 24px; border-left: 8px solid var(--success-green); 
-                        text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
-                <h2 style='color: #065F46; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
-                    {recommend_icon} Recommended Budget: {recommend_label}
-                </h2>
-                <h1 style='color: #047857; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
-                    {recommend_amount:,.2f}
-                </h1>
-                <p style='margin: 12px 0 0 0; color: #065F46; font-size: 1.4rem; font-weight: 700;'>
-                    THB per Year
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
 
 # ===== FOOTER =====
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; padding: 20px; color: var(--neutral-500);'>
     <p style='margin: 0; font-weight: 600;'>
-        WiseTOR Sense <span style='color: var(--primary-blue);'>v2.5.1</span> | 
+        WiseTOR Sense <span style='color: var(--primary-blue);'>v2.5.2</span> | 
         Session: {date} | 
         Powered by <span style='color: var(--accent-indigo);'>Gemini AI</span>
     </p>
