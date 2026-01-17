@@ -1118,6 +1118,14 @@ with tab_budget:
             system_wr_cost = 0
             
             if system_results:
+                # 📦 Show Product Package Details
+                st.markdown("#### 📦 Product Package Details")
+                for res in system_results:
+                    with st.expander(f"📦 {res['Product']} - Package: {res['Package'].get('Package', 'N/A')}", expanded=False):
+                         raw_html = format_budget_report(res['Product'], res['Package'], st.session_state.budget_factors, res['Breakdown'])
+                         clean_html = "\n".join([line.lstrip() for line in raw_html.split('\n')])
+                         st.markdown(clean_html, unsafe_allow_html=True)
+                
                 # Calculate costs per product
                 for res in system_results:
                     init_fee = res['Package'].get('Initial_Fee (THB)', 0)
