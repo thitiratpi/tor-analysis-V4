@@ -1018,7 +1018,7 @@ with tab_verify:
         else:
             valid_data = pd.DataFrame(columns=['Product', 'TOR_Sentence', 'Implementation'])
             if st.session_state.analysis_done:  # แสดง warning เฉพาะเมื่อมีการวิเคราะห์แล้ว
-                st.warning("⚠️ ไม่พบข้อมูลที่ถูกต้องสำหรับการบันทึก กรุณาตรวจสอบการเลือกผลิตภัณฑ์")
+                st.warning("⚠️ No valid data was found to save. Please check the product selection.")
         
         def split_languages(row):
             text = str(row['TOR_Sentence'])
