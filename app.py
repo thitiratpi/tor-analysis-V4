@@ -347,6 +347,19 @@ st.markdown("""
         box-shadow: var(--shadow-md);
         border: none;
     }
+    
+    /* ===== HIDE TAB BORDER LINE ===== */
+    .stTabs [data-baseweb="tab-list"] + div {
+        border-top: none !important;
+    }
+    
+    .stTabs > div:first-child {
+        border-bottom: none !important;
+    }
+    
+    .stTabs [data-baseweb="tab-border"] {
+        display: none !important;
+    }
 
     /* ===== DATA EDITOR & TABLES ===== */
     .stDataFrame {
@@ -539,6 +552,7 @@ if 'file_size' not in st.session_state: st.session_state.file_size = 0
 # ✅ Adjusted factors for budget
 if 'adjusted_factors' not in st.session_state: st.session_state.adjusted_factors = None
 if 'show_adjusted_breakdown' not in st.session_state: st.session_state.show_adjusted_breakdown = False
+if 'cost_per_manday' not in st.session_state: st.session_state.cost_per_manday = 22000  # Default 22k THB/manday
 
 # ✅ Initialize API key from secrets
 if 'gemini_key' not in st.session_state:
@@ -1406,15 +1420,15 @@ with tab_budget:
                 with col_final1:
                     st.markdown(f"""
                     <div style='background: rgba(255, 255, 255, 0.9); 
-                                padding: 32px; border-radius: 20px; border: 3px solid #93C5FD; 
-                                text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
-                        <h3 style='color: #1E40AF; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                                padding: 20px; border-radius: 16px; border: 2px solid #93C5FD; 
+                                text-align: center; box-shadow: 0 6px 12px -3px rgba(0,0,0,0.08);'>
+                        <h3 style='color: #1E40AF; margin:0 0 12px 0; font-weight: 700; font-size: 1rem;'>
                             🤖 System Estimation
                         </h3>
-                        <h1 style='color: #2563EB; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                        <h1 style='color: #2563EB; margin:0; font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em;'>
                             {system_total:,.2f}
                         </h1>
-                        <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                        <p style='margin: 6px 0 0 0; color: #64748B; font-size: 0.9rem; font-weight: 600;'>
                             THB/Year
                         </p>
                     </div>
@@ -1423,15 +1437,15 @@ with tab_budget:
                 with col_final2:
                     st.markdown(f"""
                     <div style='background: rgba(255, 255, 255, 0.9); 
-                                padding: 32px; border-radius: 20px; border: 3px solid #DDD6FE; 
-                                text-align: center; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);'>
-                        <h3 style='color: #6D28D9; margin:0 0 16px 0; font-weight: 800; font-size: 1.3rem;'>
+                                padding: 20px; border-radius: 16px; border: 2px solid #DDD6FE; 
+                                text-align: center; box-shadow: 0 6px 12px -3px rgba(0,0,0,0.08);'>
+                        <h3 style='color: #6D28D9; margin:0 0 12px 0; font-weight: 700; font-size: 1rem;'>
                             ✏️ Adjusted Budget
                         </h3>
-                        <h1 style='color: #8B5CF6; margin:0; font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em;'>
+                        <h1 style='color: #8B5CF6; margin:0; font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em;'>
                             {adjusted_total:,.2f}
                         </h1>
-                        <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1.1rem; font-weight: 600;'>
+                        <p style='margin: 6px 0 0 0; color: #64748B; font-size: 0.9rem; font-weight: 600;'>
                             THB/Year
                         </p>
                     </div>
@@ -1446,16 +1460,16 @@ with tab_budget:
                 recommend_label = "Adjusted Budget" if recommended == "adjusted" else "System Estimation"
                 
                 st.markdown(f"""
-                <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%); 
-                            padding: 40px; border-radius: 24px; border-left: 8px solid var(--success-green); 
-                            text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
-                    <h2 style='color: #065F46; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
+                <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.12) 100%); 
+                            padding: 24px; border-radius: 16px; border-left: 6px solid var(--success-green); 
+                            text-align: center; box-shadow: 0 8px 16px -4px rgba(0,0,0,0.1);'>
+                    <h2 style='color: #065F46; margin:0 0 12px 0; font-weight: 800; font-size: 1.1rem;'>
                         {recommend_icon} Recommended Budget: {recommend_label}
                     </h2>
-                    <h1 style='color: #047857; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
+                    <h1 style='color: #047857; margin:0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em;'>
                         {recommend_amount:,.2f}
                     </h1>
-                    <p style='margin: 12px 0 0 0; color: #065F46; font-size: 1.4rem; font-weight: 700;'>
+                    <p style='margin: 8px 0 0 0; color: #065F46; font-size: 1rem; font-weight: 700;'>
                         THB per Year
                     </p>
                 </div>
@@ -1464,18 +1478,18 @@ with tab_budget:
                 # Show only system estimation if not recalculated yet
                 st.markdown(f"""
                 <div style='background: rgba(255, 255, 255, 0.9); 
-                            padding: 40px; border-radius: 24px; border: 3px solid #93C5FD; 
-                            text-align: center; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15);'>
-                    <h2 style='color: #1E40AF; margin:0 0 20px 0; font-weight: 900; font-size: 1.5rem;'>
+                            padding: 24px; border-radius: 16px; border: 2px solid #93C5FD; 
+                            text-align: center; box-shadow: 0 8px 16px -4px rgba(0,0,0,0.1);'>
+                    <h2 style='color: #1E40AF; margin:0 0 12px 0; font-weight: 800; font-size: 1.1rem;'>
                         🤖 Current Budget Estimation
                     </h2>
-                    <h1 style='color: #2563EB; margin:0; font-size: 3.5rem; font-weight: 900; letter-spacing: -0.03em;'>
+                    <h1 style='color: #2563EB; margin:0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em;'>
                         {system_total:,.2f}
                     </h1>
-                    <p style='margin: 12px 0 0 0; color: #64748B; font-size: 1.4rem; font-weight: 700;'>
+                    <p style='margin: 8px 0 0 0; color: #64748B; font-size: 1rem; font-weight: 700;'>
                         THB per Year
                     </p>
-                    <p style='margin: 20px 0 0 0; color: #64748B; font-size: 1rem; font-weight: 500;'>
+                    <p style='margin: 16px 0 0 0; color: #64748B; font-size: 0.9rem; font-weight: 500;'>
                         💡 Adjust the factors above and click "Recalculate Budget" to see customized estimates
                     </p>
                 </div>
