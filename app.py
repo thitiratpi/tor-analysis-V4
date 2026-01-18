@@ -1079,7 +1079,6 @@ with tab_verify:
 # TAB 2: BUDGET ESTIMATION (✅ RESTRUCTURED v2)
 # ==========================================
 with tab_budget:
-    st.markdown("### 💰 Budget Estimation")
     
     if not st.session_state.analysis_done:
         st.warning("⚠️ Please complete the 'Results & Verification' step first.")
@@ -1222,9 +1221,23 @@ with tab_budget:
                 st.markdown("##### 💵 Additional Costs")
                 c5, c6 = st.columns(2)
                 with c5:
-                    md_input = st.number_input("Customization Mandays (22k/day)", value=factors.get('mandays', 0), step=1, key="adj_mandays")
+                    md_input = st.number_input("Number of Mandays", value=factors.get('mandays', 0), step=1, min_value=0, key="adj_mandays")
                 with c6:
+                    cost_per_md = st.number_input("Cost per Manday (THB)", value=float(factors.get('cost_per_manday', 22000.0)), step=1000.0, min_value=0.0, key="adj_cost_per_md")
+                
+                c7, c8 = st.columns(2)
+                with c7:
                     other_cost_input = st.number_input("Other Expenses (THB)", value=float(factors.get('other_expenses', 0.0)), step=1000.0, key="adj_other")
+                with c8:
+                    # Display calculated manday cost
+                    calc_md_cost = md_input * cost_per_md
+                    st.markdown(f"""
+                    <div style='margin-top: 28px; padding: 12px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%);
+                                border-radius: 8px; border: 2px solid #DDD6FE;'>
+                        <div style='font-size: 0.85rem; color: #6D28D9; font-weight: 600; margin-bottom: 4px;'>Total Customization Cost</div>
+                        <div style='font-size: 1.3rem; color: #8B5CF6; font-weight: 800;'>{calc_md_cost:,.0f} THB</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
@@ -1240,7 +1253,8 @@ with tab_budget:
                     'monthly_transactions': wr_tx, 
                     'social_channels_count': wr_ch,
                     'chatbot_required': wr_bot, 
-                    'mandays': md_input, 
+                    'mandays': md_input,
+                    'cost_per_manday': cost_per_md,
                     'other_expenses': other_cost_input
                 })
                 st.session_state.show_adjusted_breakdown = True
@@ -1281,7 +1295,8 @@ with tab_budget:
                         adjusted_product_cost += product_cost
                     
                     adjusted_mandays = st.session_state.adjusted_factors.get('mandays', 0)
-                    adjusted_manday_cost = adjusted_mandays * 22000
+                    adjusted_cost_per_manday = st.session_state.adjusted_factors.get('cost_per_manday', 22000.0)
+                    adjusted_manday_cost = adjusted_mandays * adjusted_cost_per_manday
                     adjusted_other_expenses = st.session_state.adjusted_factors.get('other_expenses', 0.0)
                     adjusted_total = adjusted_product_cost + adjusted_manday_cost + adjusted_other_expenses
                     
@@ -1325,7 +1340,10 @@ with tab_budget:
                             <p style='margin: 0; font-size: 1.8rem; font-weight: 900; color: #8B5CF6;'>
                                 {adjusted_manday_cost:,.0f} <span style='font-size: 1rem; font-weight: 600;'>THB</span>
                             </p>
-                            <p style='margin: 4px 0 0 0; font-size: 0.85rem; color: {diff_color}; font-weight: 700;'>
+                            <p style='margin: 4px 0 0 0; font-size: 0.75rem; color: #6D28D9;'>
+                                {adjusted_mandays} MD × {adjusted_cost_per_manday:,.0f} THB
+                            </p>
+                            <p style='margin: 2px 0 0 0; font-size: 0.85rem; color: {diff_color}; font-weight: 700;'>
                                 {diff_symbol} {abs(diff_manday):,.0f} THB
                             </p>
                         </div>
