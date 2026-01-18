@@ -1117,7 +1117,6 @@ with tab_budget:
             # ==========================================
             # SECTION 1: SYSTEM ESTIMATION
             # ==========================================
-            st.markdown("---")
             st.markdown("## 🤖 System Estimation")
             st.caption("AI-generated budget based on TOR analysis - Products Only")
             
