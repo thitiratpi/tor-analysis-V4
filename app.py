@@ -948,66 +948,50 @@ with tab_verify:
         if submit_changes:
             st.session_state.edited_df = edited_df_input
             
-            # Helper: แปลงค่าจาก Database หรือ String ให้เป็น Set เพื่อการเปรียบเทียบที่แม่นยำ
-            def get_set_from_val(val):
-                if pd.isna(val) or val is None or str(val).lower() == 'nan':
-                    return set()
-                # ลบอักขระ list string ทิ้ง (เผื่อกรณีข้อมูลเก่าเก็บเป็น "['A', 'B']")
-                clean = str(val).replace("[","").replace("]","").replace("'","").replace('"',"")
-                # Split ด้วย comma และตัดช่องว่าง
-                return {x.strip() for x in clean.split(',') if x.strip()}
-
             impl_cols = [f"🔧 {i}" for i in impl_options]
             working_df = edited_df_input.copy()
 
             for i in working_df.index:
                 orig_idx = working_df.loc[i, '_original_idx']
                 
-                # ===== STEP 1: ดึงค่าปัจจุบันจาก Checkbox (Current Values) =====
-                # แปลงเป็น Set ทันที
+                # ===== STEP 1: ดึงค่าปัจจุบันจาก Checkbox (Current State) =====
                 curr_prods_set = {p for p in product_options if working_df.loc[i, f"📦 {p}"]}
                 curr_impls_set = {imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]}
                 
-                # ===== STEP 2: ดึงค่าเดิมจาก Session State (Previous Values) =====
-                prev_prod_raw = st.session_state.processed_df.loc[orig_idx, 'Product_Match']
-                prev_impl_raw = st.session_state.processed_df.loc[orig_idx, 'Implementation']
-                prev_req_raw = st.session_state.processed_df.loc[orig_idx, 'Requirement_Type']
-
-                prev_prods_set = get_set_from_val(prev_prod_raw)
-                prev_impls_set = get_set_from_val(prev_impl_raw)
+                # ===== STEP 2: คำนวณค่าเดิม โดยใช้ Logic เดียวกับตอนสร้าง Checkbox (Derived Previous State) =====
+                # เราจะไม่เทียบ String ตรงๆ แต่จะดูว่า "ค่าเก่า text แบบนี้ ทำให้ Checkbox ไหนติดบ้าง"
+                prev_prod_raw = str(st.session_state.processed_df.loc[orig_idx, 'Product_Match'])
+                prev_impl_raw = str(st.session_state.processed_df.loc[orig_idx, 'Implementation'])
                 
-                # จัดการ Requirement Type ให้เป็น String คลีนๆ
-                curr_req = str(working_df.loc[i, 'Requirement_Type']).strip() if working_df.loc[i, 'Requirement_Type'] else ""
-                prev_req = str(prev_req_raw).strip() if pd.notna(prev_req_raw) else ""
-                if curr_req == 'None' or curr_req == 'nan': curr_req = ""
-                if prev_req == 'None' or prev_req == 'nan': prev_req = ""
+                # จำลองการ Tick Checkbox จากค่าเก่า (Logic เดียวกับตอน Init Data Editor)
+                prev_prods_set = {p for p in product_options if p in prev_prod_raw}
+                prev_impls_set = {imp for imp in impl_options if imp in prev_impl_raw}
 
+                # จัดการ Requirement Type (อันนี้เทียบ String ได้ แต่ต้องระวัง NaN)
+                curr_req = str(working_df.loc[i, 'Requirement_Type']).strip() if working_df.loc[i, 'Requirement_Type'] else ""
+                prev_req_raw = st.session_state.processed_df.loc[orig_idx, 'Requirement_Type']
+                prev_req = str(prev_req_raw).strip() if pd.notna(prev_req_raw) and str(prev_req_raw).lower() != 'nan' else ""
+                
                 # ===== STEP 3: เปรียบเทียบ (CHECK IF CHANGED) =====
-                # ใช้ Set Comparison (ไม่สนใจลำดับ ไม่สนใจ whitespace)
+                # เทียบว่า "Checkbox ที่ติด" เหมือนเดิมไหม (ไม่สนใจ Text ขยะที่ซ่อนอยู่)
                 prod_changed = (curr_prods_set != prev_prods_set)
                 impl_changed = (curr_impls_set != prev_impls_set)
                 req_changed = (curr_req != prev_req)
                 
                 user_changed = prod_changed or impl_changed or req_changed
                 
-                # ===== STEP 4: APPLY AUTO-ENFORCEMENT LOGIC (ปรับ Logic Checkbox) =====
-                # 4.1 Single Select Logic (Implementation)
-                # ถ้า User เลือกมากกว่า 1 ให้ยึดอันล่าสุด (แต่ใน data editor เราไม่รู้อันไหนล่าสุด ดังนั้นต้องใช้ priority)
-                # Logic: ถ้ามี Non-Compliant ให้เอาอันอื่นออก
+                # ===== STEP 4: APPLY AUTO-ENFORCEMENT LOGIC =====
+                # 4.1 Implementation Logic
                 if working_df.loc[i, '🔧 Non-Compliant']:
                      working_df.loc[i, '🔧 Standard'] = False
                      working_df.loc[i, '🔧 Customize/Integration'] = False
                 elif working_df.loc[i, '🔧 Customize/Integration'] and working_df.loc[i, '🔧 Standard']:
-                     # ถ้าเลือกทั้ง Standard และ Customize (User อาจจะติ๊กเพิ่ม) -> ให้ถือเป็น Customize
                      working_df.loc[i, '🔧 Standard'] = False
                 
-                # 4.2 Non-Compliant Logic (Product)
+                # 4.2 Non-Compliant Product Logic
                 if working_df.loc[i, '📦 Non-Compliant']:
-                    prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
-                    for c in prod_cols_to_clear: 
+                    for c in ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']: 
                         working_df.loc[i, c] = False
-                    
-                    # บังคับ Implementation เป็น Non-Compliant ด้วย
                     working_df.loc[i, '🔧 Non-Compliant'] = True
                     working_df.loc[i, '🔧 Standard'] = False
                     working_df.loc[i, '🔧 Customize/Integration'] = False
@@ -1018,25 +1002,21 @@ with tab_verify:
                 if user_changed:
                     new_status = '✅ Edited'
                 else:
-                    new_status = current_status  # คงสถานะเดิมไว้ (ถ้าเป็น Auto ก็ Auto, ถ้าเคย Edited แล้วก็ Edited ต่อ)
+                    new_status = current_status  # ไม่เปลี่ยนสถานะถ้า Checkbox ยังเหมือนเดิม
                 
                 working_df.loc[i, '📝 Status'] = new_status
                 
-                # ===== STEP 6: SAVE FINAL VALUES BACK TO MAIN DF =====
-                # แปลงจาก Checkbox กลับเป็น String เพื่อเก็บลง DataFrame หลัก
+                # ===== STEP 6: SAVE FINAL VALUES =====
                 curr_prods_final = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
                 curr_impls_final = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
                 
-                curr_prod_str_final = ", ".join(curr_prods_final)
-                curr_impl_str_final = ", ".join(curr_impls_final)
-                
-                st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str_final
-                st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str_final
+                st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = ", ".join(curr_prods_final)
+                st.session_state.processed_df.loc[orig_idx, 'Implementation'] = ", ".join(curr_impls_final)
                 st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = working_df.loc[i, 'Requirement_Type']
                 st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
 
             st.session_state.edited_df = working_df
-            st.success("✅ Changes Saved & Logic Applied!")
+            st.success("✅ Changes Saved!")
             time.sleep(0.5)
             st.rerun()
 
