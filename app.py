@@ -961,7 +961,7 @@ with tab_verify:
                 hide_index=False, use_container_width=True, num_rows="dynamic", height=500, key="data_editor_form"
             )
             
-            submit_changes = st.form_submit_button("💾 Save Changes (Apply Logic)")
+            submit_changes = st.form_submit_button("💾 Save Changes ")
 
         # --- LOGIC ENFORCEMENT ON SUBMIT ---
         if submit_changes:
