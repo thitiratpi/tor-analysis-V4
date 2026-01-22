@@ -1223,9 +1223,6 @@ with tab_budget:
                     st.markdown("##### 🟡 Warroom Configuration")
                     wr_users = st.number_input("Warroom Users", value=factors.get('num_users', 5), min_value=1, key="adj_wr_users")
                     wr_tx = st.number_input("Monthly Transaction", value=factors.get('monthly_transactions', 35000), step=1000, key="adj_wr_tx")
-                    
-                c3, c4 = st.columns(2)
-                with c3:
                     wr_ch = st.number_input("Social Channels", value=factors.get('social_channels_count', 0), key="adj_wr_ch")
                     wr_bot = st.checkbox("Chatbot Required", value=factors.get('chatbot_required', False), key="adj_wr_bot")
                 
