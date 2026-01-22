@@ -979,7 +979,21 @@ with tab_verify:
             for i in working_df.index:
                 orig_idx = working_df.loc[i, '_original_idx']
                 
-                # 1. Single Select Logic (Implementation)
+                # ===== STEP 1: CHECK IF USER ACTUALLY CHANGED THIS ROW (BEFORE AUTO-ENFORCEMENT) =====
+                # Get current values BEFORE any auto-enforcement
+                curr_prods_before = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
+                curr_impls_before = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
+                curr_prod_str_before = ", ".join(curr_prods_before)
+                curr_impl_str_before = ", ".join(curr_impls_before)
+                
+                # Compare with original
+                orig_data = st.session_state.original_selections.get(orig_idx, {})
+                
+                user_changed = (normalize_selection(curr_prod_str_before) != normalize_selection(orig_data.get('products'))) or \
+                               (normalize_selection(curr_impl_str_before) != normalize_selection(orig_data.get('implementation')))
+                
+                # ===== STEP 2: APPLY AUTO-ENFORCEMENT LOGIC =====
+                # 2.1 Single Select Logic (Implementation)
                 checked_impls = [col for col in impl_cols if working_df.loc[i, col]]
                 if len(checked_impls) > 1:
                     if working_df.loc[i, '🔧 Non-Compliant']:
@@ -988,7 +1002,7 @@ with tab_verify:
                     elif working_df.loc[i, '🔧 Customize/Integration'] and working_df.loc[i, '🔧 Standard']:
                          working_df.loc[i, '🔧 Standard'] = False
                 
-                # 2. Non-Compliant Logic (Product)
+                # 2.2 Non-Compliant Logic (Product)
                 if working_df.loc[i, '📦 Non-Compliant']:
                     prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
                     for c in prod_cols_to_clear: 
@@ -998,22 +1012,18 @@ with tab_verify:
                     working_df.loc[i, '🔧 Standard'] = False
                     working_df.loc[i, '🔧 Customize/Integration'] = False
 
-                # 3. Construct Strings & Status Update
-                curr_prods = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
-                curr_impls = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
-                curr_prod_str = ", ".join(curr_prods)
-                curr_impl_str = ", ".join(curr_impls)
-                
-                orig_data = st.session_state.original_selections.get(orig_idx, {})
-                
-                is_changed = (normalize_selection(curr_prod_str) != normalize_selection(orig_data.get('products'))) or \
-                             (normalize_selection(curr_impl_str) != normalize_selection(orig_data.get('implementation')))
-                
-                new_status = '✅ Edited' if is_changed else '🤖 Auto'
+                # ===== STEP 3: UPDATE STATUS (BASED ON USER CHANGE, NOT AUTO-ENFORCEMENT) =====
+                new_status = '✅ Edited' if user_changed else '🤖 Auto'
                 working_df.loc[i, '📝 Status'] = new_status
                 
-                st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str
-                st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str
+                # ===== STEP 4: SAVE FINAL VALUES (AFTER AUTO-ENFORCEMENT) =====
+                curr_prods_final = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
+                curr_impls_final = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
+                curr_prod_str_final = ", ".join(curr_prods_final)
+                curr_impl_str_final = ", ".join(curr_impls_final)
+                
+                st.session_state.processed_df.loc[orig_idx, 'Product_Match'] = curr_prod_str_final
+                st.session_state.processed_df.loc[orig_idx, 'Implementation'] = curr_impl_str_final
                 st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'] = working_df.loc[i, 'Requirement_Type']
                 st.session_state.processed_df.loc[orig_idx, '📝 Status'] = new_status
 
