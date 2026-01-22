@@ -543,9 +543,6 @@ if 'save_history' not in st.session_state: st.session_state.save_history = []
 if 'tor_raw_text' not in st.session_state: st.session_state.tor_raw_text = None
 if 'matched_products' not in st.session_state: st.session_state.matched_products = []
 if 'is_excel' not in st.session_state: st.session_state.is_excel = False
-# ✅ User edit tracking
-if 'original_selections' not in st.session_state: st.session_state.original_selections = {}
-if 'user_modified_rows' not in st.session_state: st.session_state.user_modified_rows = set()
 # File Info
 if 'file_name' not in st.session_state: st.session_state.file_name = ""
 if 'file_size' not in st.session_state: st.session_state.file_size = 0
@@ -778,14 +775,6 @@ with tab_verify:
                 st.session_state.matched_products = matched_products
                 st.session_state.analysis_done = True
                 
-                # Initialize original selections
-                st.session_state.original_selections = {}
-                for idx in result_df.index:
-                    st.session_state.original_selections[idx] = {
-                        'products': str(result_df.loc[idx, 'Product_Match']),
-                        'implementation': str(result_df.loc[idx, 'Implementation'])
-                    }
-                
                 st.rerun()
                 
             except Exception as e:
@@ -890,14 +879,6 @@ with tab_verify:
             product_options = ['Zocial Eye', 'Warroom', 'Outsource', 'Other Product', 'Non-Compliant']
             impl_options = ['Standard', 'Customize/Integration', 'Non-Compliant']
 
-            if 'original_selections' not in st.session_state or len(st.session_state.original_selections) == 0:
-                st.session_state.original_selections = {}
-                for idx in df.index:
-                    st.session_state.original_selections[idx] = {
-                        'products': str(df.loc[idx, 'Product_Match']),
-                        'implementation': str(df.loc[idx, 'Implementation'])
-                    }
-
             for prod in product_options:
                 df[f"📦 {prod}"] = df['Product_Match'].apply(lambda x: prod in str(x))
             for impl in impl_options:
@@ -961,9 +942,9 @@ with tab_verify:
                 hide_index=False, use_container_width=True, num_rows="dynamic", height=500, key="data_editor_form"
             )
             
-            submit_changes = st.form_submit_button("💾 Save Changes ")
+            submit_changes = st.form_submit_button("💾 Save Changes")
 
-        # --- LOGIC ENFORCEMENT ON SUBMIT ---
+        # --- LOGIC ENFORCEMENT ON SUBMIT (✅ แก้ไขส่วนนี้) ---
         if submit_changes:
             st.session_state.edited_df = edited_df_input
             
@@ -979,21 +960,25 @@ with tab_verify:
             for i in working_df.index:
                 orig_idx = working_df.loc[i, '_original_idx']
                 
-                # ===== STEP 1: CHECK IF USER ACTUALLY CHANGED THIS ROW (BEFORE AUTO-ENFORCEMENT) =====
-                # Get current values BEFORE any auto-enforcement
+                # ===== STEP 1: GET CURRENT VALUES (BEFORE AUTO-ENFORCEMENT) =====
                 curr_prods_before = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
                 curr_impls_before = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
                 curr_prod_str_before = ", ".join(curr_prods_before)
                 curr_impl_str_before = ", ".join(curr_impls_before)
                 
-                # Compare with original
-                orig_data = st.session_state.original_selections.get(orig_idx, {})
+                # ===== STEP 2: GET PREVIOUS VALUES FROM processed_df =====
+                prev_prod_str = str(st.session_state.processed_df.loc[orig_idx, 'Product_Match'])
+                prev_impl_str = str(st.session_state.processed_df.loc[orig_idx, 'Implementation'])
+                prev_req_type = str(st.session_state.processed_df.loc[orig_idx, 'Requirement_Type'])
+                curr_req_type = str(working_df.loc[i, 'Requirement_Type'])
                 
-                user_changed = (normalize_selection(curr_prod_str_before) != normalize_selection(orig_data.get('products'))) or \
-                               (normalize_selection(curr_impl_str_before) != normalize_selection(orig_data.get('implementation')))
+                # ===== STEP 3: CHECK IF USER ACTUALLY CHANGED THIS ROW =====
+                user_changed = (normalize_selection(curr_prod_str_before) != normalize_selection(prev_prod_str)) or \
+                               (normalize_selection(curr_impl_str_before) != normalize_selection(prev_impl_str)) or \
+                               (curr_req_type != prev_req_type)
                 
-                # ===== STEP 2: APPLY AUTO-ENFORCEMENT LOGIC =====
-                # 2.1 Single Select Logic (Implementation)
+                # ===== STEP 4: APPLY AUTO-ENFORCEMENT LOGIC =====
+                # 4.1 Single Select Logic (Implementation)
                 checked_impls = [col for col in impl_cols if working_df.loc[i, col]]
                 if len(checked_impls) > 1:
                     if working_df.loc[i, '🔧 Non-Compliant']:
@@ -1002,7 +987,7 @@ with tab_verify:
                     elif working_df.loc[i, '🔧 Customize/Integration'] and working_df.loc[i, '🔧 Standard']:
                          working_df.loc[i, '🔧 Standard'] = False
                 
-                # 2.2 Non-Compliant Logic (Product)
+                # 4.2 Non-Compliant Logic (Product)
                 if working_df.loc[i, '📦 Non-Compliant']:
                     prod_cols_to_clear = ['📦 Zocial Eye', '📦 Warroom', '📦 Outsource', '📦 Other Product']
                     for c in prod_cols_to_clear: 
@@ -1012,11 +997,16 @@ with tab_verify:
                     working_df.loc[i, '🔧 Standard'] = False
                     working_df.loc[i, '🔧 Customize/Integration'] = False
 
-                # ===== STEP 3: UPDATE STATUS (BASED ON USER CHANGE, NOT AUTO-ENFORCEMENT) =====
-                new_status = '✅ Edited' if user_changed else '🤖 Auto'
+                # ===== STEP 5: UPDATE STATUS (ONLY IF USER CHANGED) =====
+                current_status = st.session_state.processed_df.loc[orig_idx, '📝 Status']
+                if user_changed:
+                    new_status = '✅ Edited'
+                else:
+                    new_status = current_status  # Keep existing status
+                
                 working_df.loc[i, '📝 Status'] = new_status
                 
-                # ===== STEP 4: SAVE FINAL VALUES (AFTER AUTO-ENFORCEMENT) =====
+                # ===== STEP 6: SAVE FINAL VALUES (AFTER AUTO-ENFORCEMENT) =====
                 curr_prods_final = [p for p in product_options if working_df.loc[i, f"📦 {p}"]]
                 curr_impls_final = [imp for imp in impl_options if working_df.loc[i, f"🔧 {imp}"]]
                 curr_prod_str_final = ", ".join(curr_prods_final)
